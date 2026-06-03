@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Silence the "multiple lockfiles" workspace root warning
-  outputFileTracingRoot: '/Users/ddbrother/Github/nobelium',
+  //outputFileTracingRoot: '/Users/ddbrother/Github/nobelium',
 
   experimental: {
     // Set client-side router cache stale time to 0 so dynamic pages
