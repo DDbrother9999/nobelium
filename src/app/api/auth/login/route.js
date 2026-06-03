@@ -11,11 +11,11 @@ export async function POST(request) {
     // Validate token
     const decodedToken = await adminAuth.verifyIdToken(idToken);
     
-    const email = decodedToken.email || "no-email@nobellium.com";
+    const email = decodedToken.email || "no-email@nobelium.com";
     const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : [];
 
     const updateData = {
-      name: decodedToken.name || "Nobellium Author", 
+      name: decodedToken.name || "Nobelium Author", 
       email, 
       avatarUrl: decodedToken.picture || ""
     };

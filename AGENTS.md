@@ -4,9 +4,9 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Nobellium Brand & Design Guidelines
+# Nobelium Brand & Design Guidelines
 
-When creating or modifying components for the **Nobellium** web app, you must strictly adhere to the following design rules:
+When creating or modifying components for the **Nobelium** web app, you must strictly adhere to the following design rules:
 
 1. **Prioritize Simplicity & Ultra-Clean UI**:
    - Absolutely NO complex CSS gradients, `backdrop-filter` (glassmorphism), heavy box shadows, or overly stylized wrappers.
@@ -19,7 +19,7 @@ When creating or modifying components for the **Nobellium** web app, you must st
    - **Accents**: Use Yellow/Gold (`#FFD100` or `var(--accent-yellow)`) exclusively for hover effects, active states, or minor decorative underlines.
 
 3. **Typography**:
-   - Use `Georgia, serif` (`var(--font-serif)`) for the publication title (Nobellium), large headers (`h1`, `h2`, `h3`), and featured article titles.
+   - Use `Georgia, serif` (`var(--font-serif)`) for the publication title (Nobelium), large headers (`h1`, `h2`, `h3`), and featured article titles.
    - Use standard sans-serif (e.g., system UI fonts) for body paragraphs and functional text.
 
 4. **Layout**:
@@ -44,4 +44,4 @@ When creating or modifying components for the **Nobellium** web app, you must st
 
 4. **Production Deployment**:
    - The application runs on a local VM and is managed by PM2 (`pm2 status`).
-   - If you make backend or structural changes, always run `npm run build && npx pm2 restart nobellium` to apply them to the live production server.
+   - If you make backend or structural changes, always run `npm run build && npx pm2 restart nobelium` to apply them to the live production server.

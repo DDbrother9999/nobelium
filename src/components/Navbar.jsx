@@ -15,7 +15,7 @@ export default function Navbar() {
           </div>
           <div className="header-logo">
             <Link href="/">
-              <span className="logo-text">Nobellium</span>
+              <span className="logo-text">Nobelium</span>
             </Link>
           </div>
           <div className="header-right">
