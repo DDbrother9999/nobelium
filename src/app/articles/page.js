@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import connectMongo from "@/lib/mongodb";
 import Article from "@/models/Article";
 import User from "@/models/User";
+import Edition from "@/models/Edition";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default async function ArticlesArchive() {
   const articles = await Article.find({ isDeleted: { $ne: true }, status: "Published" })
     .sort({ createdAt: -1 })
     .populate("authorId")
+    .populate("editionId")
     .lean();
 
   return (

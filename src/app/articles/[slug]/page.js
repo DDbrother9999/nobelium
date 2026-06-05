@@ -3,6 +3,7 @@ import { ArrowLeft, User, Calendar } from "lucide-react";
 import connectMongo from "@/lib/mongodb";
 import Article from "@/models/Article";
 import UserSchema from "@/models/User";
+import Edition from "@/models/Edition";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ export default async function SingleArticle({ params }) {
   
   const article = await Article.findOne({ slug: resolvedParams.slug, isDeleted: { $ne: true }, status: "Published" })
     .populate("authorId")
+    .populate("editionId")
     .lean();
 
   if (!article) {
@@ -39,7 +41,7 @@ export default async function SingleArticle({ params }) {
             <User size={16} /> {article.authorId?.name || "Staff Writer"}
           </Link>
           <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Calendar size={16} /> {new Date(article.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+            <Calendar size={16} /> {new Date(article.publishedAt || (article.editionId && article.editionId.releaseDate) || article.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
       </div>
@@ -51,6 +53,42 @@ export default async function SingleArticle({ params }) {
       )}
 
       <div className="article-content" dangerouslySetInnerHTML={{ __html: article.content }} />
+
+      {article.authorId && (
+        <div style={{
+          marginTop: "4rem",
+          padding: "2rem",
+          border: "1px solid var(--border)",
+          backgroundColor: "#ffffff",
+          display: "flex",
+          gap: "2rem",
+          alignItems: "flex-start"
+        }}>
+          <div style={{ flexShrink: 0 }}>
+            {article.authorId.avatarUrl ? (
+              <img 
+                src={article.authorId.avatarUrl} 
+                alt={article.authorId.name} 
+                style={{ width: "100px", height: "100px", borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)" }} 
+              />
+            ) : (
+              <div style={{ width: "100px", height: "100px", borderRadius: "50%", backgroundColor: "#ffffff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <User size={40} color="#111111" />
+              </div>
+            )}
+          </div>
+          <div>
+            <Link href={`/personal/${article.authorId._id}`} style={{ textDecoration: "none" }}>
+              <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", color: "var(--primary)", margin: "0 0 0.5rem 0" }}>
+                {article.authorId.name}
+              </h3>
+            </Link>
+            <p style={{ margin: 0, color: "#111111", lineHeight: "1.6", fontSize: "1rem" }}>
+              {article.authorId.bio || `Author at The Nobleman.`}
+            </p>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

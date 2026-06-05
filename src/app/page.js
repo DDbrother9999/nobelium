@@ -2,6 +2,7 @@ import Link from "next/link";
 import connectMongo from "@/lib/mongodb";
 import Article from "@/models/Article";
 import User from "@/models/User";
+import Edition from "@/models/Edition";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function Home() {
     .sort({ createdAt: -1 })
     .limit(4)
     .populate("authorId")
+    .populate("editionId")
     .lean();
 
   const featuredArticle = articles.length > 0 ? articles[0] : null;
@@ -31,7 +33,7 @@ export default async function Home() {
               <div className="recent-content">
                 <h3 style={{ textTransform: "uppercase" }}><Link href={`/articles/${story.slug}`}>{story.title}</Link></h3>
                 <div className="meta">
-                  <span className="author">{story.authorId?.name || "Staff Writer"}</span> • {new Date(story.createdAt).toLocaleDateString()}
+                  <span className="author">{story.authorId?.name || "Staff Writer"}</span> • {new Date(story.publishedAt || (story.editionId && story.editionId.releaseDate) || story.createdAt).toLocaleDateString()}
                 </div>
               </div>
             </div>

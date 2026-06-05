@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const [editions, setEditions] = useState([]);
   const [articles, setArticles] = useState([]);
   const [selectedEdition, setSelectedEdition] = useState("");
+  const [selectedEditionDate, setSelectedEditionDate] = useState("");
   const [newEditionName, setNewEditionName] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [manualSubject, setManualSubject] = useState("Biology");
@@ -66,6 +67,15 @@ export default function AdminDashboard() {
     return editions.find(edition => edition._id === selectedEdition)?.name || "Selected Edition";
   }, [editions, selectedEdition]);
 
+  useEffect(() => {
+    const edition = editions.find(e => e._id === selectedEdition);
+    if (edition && edition.releaseDate) {
+      setSelectedEditionDate(new Date(edition.releaseDate).toISOString().split('T')[0]);
+    } else {
+      setSelectedEditionDate("");
+    }
+  }, [selectedEdition, editions]);
+
   const visibleArticles = useMemo(() => {
     if (!selectedEdition) return articles.filter(article => !article.editionId);
     return articles.filter(article => article.editionId === selectedEdition);
@@ -95,6 +105,24 @@ export default function AdminDashboard() {
       setEditions([data.edition, ...editions]);
       setSelectedEdition(data.edition._id);
       setNewEditionName("");
+    } else {
+      toast.error("Error: " + data.error);
+    }
+  };
+
+  const handleUpdateEditionDate = async (e) => {
+    e.preventDefault();
+    if (!selectedEdition) return;
+
+    const res = await fetch(`/api/editions/${selectedEdition}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ releaseDate: selectedEditionDate || null }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast.success("Edition date updated.");
+      setEditions(editions.map(ed => ed._id === data.edition._id ? data.edition : ed));
     } else {
       toast.error("Error: " + data.error);
     }
@@ -234,6 +262,23 @@ export default function AdminDashboard() {
             </select>
           </div>
 
+          {selectedEdition && (
+            <form onSubmit={handleUpdateEditionDate} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-end" }}>
+              <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
+                <label>Publication Date</label>
+                <input
+                  type="date"
+                  value={selectedEditionDate}
+                  onChange={e => setSelectedEditionDate(e.target.value)}
+                  style={{ width: "100%", padding: "0.5rem", border: "1px solid var(--border)", fontSize: "1rem" }}
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ padding: "0.5rem 1rem", height: "42px" }}>Save Date</button>
+            </form>
+          )}
+        </div>
+
+        <div className="admin-top-grid" style={{ marginTop: "1rem", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
           <form onSubmit={handleCreateEdition} style={{ display: "flex", gap: "0.75rem" }}>
             <input
               value={newEditionName}

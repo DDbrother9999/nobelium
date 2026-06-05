@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Calendar, User } from "lucide-react";
 
 export default function ArticleCard({ article }) {
-  const articleDate = article.publishedAt || article.createdAt;
+  const articleDate = article.publishedAt || (article.editionId && article.editionId.releaseDate) || article.createdAt;
 
   return (
     <Link href={`/articles/${article.slug}`} className="article-card">
