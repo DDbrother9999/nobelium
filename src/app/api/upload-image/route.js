@@ -18,14 +18,20 @@ export async function POST(request) {
       return NextResponse.json({ error: "Forbidden: Unauthorized role" }, { status: 403 });
     }
 
-    const { fileName, fileType } = await request.json();
+    const { fileName, fileType, articleSlug, editionSlug } = await request.json();
     
     if (!fileName || !fileType) {
       return NextResponse.json({ error: "Missing file metadata" }, { status: 400 });
     }
 
     const safeFileName = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-    const s3Key = `uploads/editor/${safeFileName}`;
+    
+    let s3Key;
+    if (articleSlug && editionSlug) {
+      s3Key = `uploads/editions/${editionSlug}/${articleSlug}/${safeFileName}`;
+    } else {
+      s3Key = `uploads/editor/${safeFileName}`;
+    }
 
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME,

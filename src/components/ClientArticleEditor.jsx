@@ -70,6 +70,10 @@ export default function ClientArticleEditor({ initialArticle, users, editions })
     }
   };
 
+  const currentEdition = editions.find(ed => ed._id === editionId);
+  const currentEditionSlug = currentEdition ? currentEdition.slug : "unknown-edition";
+  const currentArticleSlug = slug || "untitled-article";
+
   return (
     <>
       <ToastContainer toasts={toasts} />
@@ -150,6 +154,8 @@ export default function ClientArticleEditor({ initialArticle, users, editions })
                 imageBank={imageBank}
                 setImageBank={setImageBank}
                 toast={toast}
+                articleSlug={currentArticleSlug}
+                editionSlug={currentEditionSlug}
               />
             </div>
           </div>
@@ -215,7 +221,12 @@ export default function ClientArticleEditor({ initialArticle, users, editions })
                   const presignRes = await fetch("/api/upload-image", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ fileName: file.name, fileType: file.type || "application/octet-stream" })
+                    body: JSON.stringify({ 
+                      fileName: file.name, 
+                      fileType: file.type || "application/octet-stream",
+                      articleSlug: currentArticleSlug,
+                      editionSlug: currentEditionSlug
+                    })
                   });
                   const presignData = await presignRes.json();
                   if (presignData.success) {

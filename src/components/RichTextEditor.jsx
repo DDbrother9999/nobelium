@@ -194,7 +194,7 @@ function LinkPopover({ editor, toast, wrapperRef }) {
   );
 }
 
-const MenuBar = ({ editor, onSetHeaderImage, toast }) => {
+const MenuBar = ({ editor, onSetHeaderImage, toast, articleSlug, editionSlug }) => {
   const [isUploading, setIsUploading] = useState(false);
 
   if (!editor) return null;
@@ -207,7 +207,12 @@ const MenuBar = ({ editor, onSetHeaderImage, toast }) => {
       const presignRes = await fetch('/api/upload-image', {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName: file.name, fileType: file.type || "application/octet-stream" })
+        body: JSON.stringify({ 
+          fileName: file.name, 
+          fileType: file.type || "application/octet-stream",
+          articleSlug,
+          editionSlug
+        })
       });
       const presignData = await presignRes.json();
       if (presignData.success) {
@@ -310,7 +315,7 @@ const MenuBar = ({ editor, onSetHeaderImage, toast }) => {
   );
 };
 
-export default function RichTextEditor({ content, onChange, onSetHeaderImage, imageBank, setImageBank, toast: externalToast }) {
+export default function RichTextEditor({ content, onChange, onSetHeaderImage, imageBank, setImageBank, toast: externalToast, articleSlug, editionSlug }) {
   const { toasts, toast: internalToast } = useToast();
   const toast = externalToast || internalToast;
 
@@ -355,7 +360,12 @@ export default function RichTextEditor({ content, onChange, onSetHeaderImage, im
       const presignRes = await fetch('/api/upload-image', {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName: file.name, fileType: file.type || "application/octet-stream" })
+        body: JSON.stringify({ 
+          fileName: file.name, 
+          fileType: file.type || "application/octet-stream",
+          articleSlug,
+          editionSlug
+        })
       });
       const presignData = await presignRes.json();
       if (presignData.success) {
@@ -483,7 +493,7 @@ export default function RichTextEditor({ content, onChange, onSetHeaderImage, im
       `}</style>
 
       <div className="editor-wrapper" ref={wrapperRef}>
-        <MenuBar editor={editor} onSetHeaderImage={onSetHeaderImage} toast={toast} />
+        <MenuBar editor={editor} onSetHeaderImage={onSetHeaderImage} toast={toast} articleSlug={articleSlug} editionSlug={editionSlug} />
         <LinkPopover editor={editor} toast={toast} wrapperRef={wrapperRef} />
 
         <div className="editor-body">
