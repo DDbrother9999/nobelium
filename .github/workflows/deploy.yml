@@ -39,4 +39,5 @@ jobs:
           
             pm2 save
           
+            wait 5
             exit 0
