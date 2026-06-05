@@ -28,7 +28,7 @@ export default async function EditArticlePage({ params }) {
   };
 
   const serializedUsers = users.map(u => ({ _id: u._id.toString(), name: u.name }));
-  const serializedEditions = editions.map(e => ({ _id: e._id.toString(), name: e.name }));
+  const serializedEditions = editions.map(e => ({ _id: e._id.toString(), name: e.name, slug: e.slug }));
 
   return (
     <ClientArticleEditor 

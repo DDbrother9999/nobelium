@@ -67,7 +67,13 @@ export async function POST(request) {
       return NextResponse.json({ error: "Forbidden: Not assigned to this subject" }, { status: 403 });
     }
     const editionId = body.editionId || undefined;
-    const slug = `${slugify(title, { lower: true, strict: true }) || "untitled-draft"}-${Date.now()}`;
+    let baseSlug = slugify(title, { lower: true, strict: true }) || "untitled-draft";
+    let slug = baseSlug;
+    let counter = 1;
+    while (await Article.findOne({ slug })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
 
     const article = await Article.create({
       title,

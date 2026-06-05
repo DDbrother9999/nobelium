@@ -39,7 +39,13 @@ export async function POST(request) {
     
     if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
 
-    const slug = slugify(name, { lower: true, strict: true }) + '-' + Date.now();
+    let baseSlug = slugify(name, { lower: true, strict: true }) || "untitled-edition";
+    let slug = baseSlug;
+    let counter = 1;
+    while (await Edition.findOne({ slug })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
 
     const edition = await Edition.create({
       name,
