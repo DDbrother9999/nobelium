@@ -29,11 +29,12 @@ jobs:
             npm install
             
             npm run build
-            
+            exec </dev/null
+          
             if pm2 describe "nobelium" > /dev/null 2>&1; then
               PORT=8080 pm2 restart "nobelium" --update-env
             else
               PORT=8080 pm2 start npm --name "nobelium" -- run start
             fi
+          
             pm2 save
-            pm2 disconnect
