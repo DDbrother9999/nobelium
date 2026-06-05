@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: prod
-
+    continue-on-error: true
     steps:
       - name: build and deploy
         uses: appleboy/ssh-action@v1.2.5
@@ -17,27 +17,9 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script_stop: true
-          command_timeout: 3m
           script: |
-            set +e
             cd nobelium
-          
             git pull origin main
-          
-            rm -rf .next node_modules
-          
-            npm install
-          
-            npm run build
-          
-            if pm2 describe "nobelium" > /dev/null 2>&1; then
-              PORT=8080 pm2 restart "nobelium" --update-env
-            else
-              PORT=8080 pm2 start npm --name "nobelium" -- run start
-            fi
-          
-            pm2 save
-          
-            sleep 5
-            exit 0
+            chmod +x scripts/deploy.sh
+            nohup ./scripts/deploy.sh > deploy_log.txt 2>&1 < /dev/null &
+            disown
