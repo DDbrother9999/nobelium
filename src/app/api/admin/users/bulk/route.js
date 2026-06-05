@@ -29,16 +29,7 @@ export async function POST(request) {
       
       const existingUser = await User.findOne({ email: u.email });
       if (existingUser) {
-        // Update role if they exist? Or just leave them if we are just creating.
-        // Let's just ensure they have at least the requested role or keep their higher role.
-        if (existingUser.role !== "Admin") {
-          existingUser.role = role || "Staff";
-          if (u.name && u.name !== "New User" && (!existingUser.name || existingUser.name === "New User")) {
-             existingUser.name = u.name;
-          }
-          await existingUser.save();
-          createdCount++;
-        }
+        continue;
       } else {
         await User.create({
           email: u.email,
