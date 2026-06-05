@@ -1,5 +1,4 @@
-import ArticleCard from "@/components/ArticleCard";
-import { Search } from "lucide-react";
+import ArchiveClient from "./ArchiveClient";
 import connectMongo from "@/lib/mongodb";
 import Article from "@/models/Article";
 import User from "@/models/User";
@@ -22,22 +21,7 @@ export default async function ArticlesArchive() {
         <p style={{ fontSize: "1.1rem" }}>Explore all publications across our scientific disciplines.</p>
       </div>
 
-      <div className="search-bar">
-        <Search size={20} className="search-icon" />
-        <input type="text" placeholder="Search articles by title, subject, or author..." />
-      </div>
-
-      {articles.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#666" }}>
-          No articles have been published yet.
-        </div>
-      ) : (
-        <div className="article-grid">
-          {articles.map(article => (
-            <ArticleCard key={article.slug} article={article} />
-          ))}
-        </div>
-      )}
+      <ArchiveClient initialArticles={JSON.parse(JSON.stringify(articles))} />
     </div>
   );
 }

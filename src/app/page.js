@@ -33,7 +33,15 @@ export default async function Home() {
               <div className="recent-content">
                 <h3 style={{ textTransform: "uppercase" }}><Link href={`/articles/${story.slug}`}>{story.title}</Link></h3>
                 <div className="meta">
-                  <span className="author">{story.authorId?.name || "Staff Writer"}</span> • {new Date(story.publishedAt || (story.editionId && story.editionId.releaseDate) || story.createdAt).toLocaleDateString()}
+                  <span className="author">
+                    {story.authorId && story.authorId._id ? (
+                      <Link href={`/personal/${story.authorId._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        {story.authorId.name}
+                      </Link>
+                    ) : (
+                      story.authorId?.name || "Staff Writer"
+                    )}
+                  </span> • {new Date(story.publishedAt || (story.editionId && story.editionId.releaseDate) || story.createdAt).toLocaleDateString()}
                 </div>
               </div>
             </div>
