@@ -37,10 +37,10 @@ When creating or modifying components for the **Nobelium** web app, you must str
    - Articles are **soft-deleted** rather than permanently removed. The `Article` Mongoose schema includes an `isDeleted: { type: Boolean, default: false }` flag.
    - All Mongoose queries fetching articles for public viewing (Homepage, Archive) or the Staff MUST exclude deleted articles by using `{ isDeleted: { $ne: true } }`.
 
-3. **Automated EPUB Importer**:
-   - We support automated article drafting via InDesign EPUB imports (`/api/articles/import-epub/route.js`).
-   - The importer extracts images locally and rewrites the HTML `<img>` tags.
-   - **Crucial**: The parser explicitly sanitizes InDesign's nested `<span>` tags, removes absolute `<style>` positioning, and handles URL-encoded file names to ensure TipTap can cleanly ingest the HTML without stripping links and images.
+3. **Automated HTML Zip Importer**:
+   - We support automated article drafting via InDesign HTML exports bundled as a zip file (`/api/articles/import-html-zip/route.js`).
+   - The importer extracts images and uploads them directly to Cloudflare R2 (S3), storing the public URLs in the article's `imageBank`.
+   - **Crucial**: The parser explicitly sanitizes InDesign's nested `<span>` tags and entirely removes `<figure>` and `<img>` tags to ensure TipTap can cleanly ingest the HTML. Authors can later insert images manually using the Image Bank sidebar.
 
 4. **Production Deployment**:
    - The application runs on a local VM and is managed by PM2 (`pm2 status`).
