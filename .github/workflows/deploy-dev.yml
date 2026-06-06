@@ -6,9 +6,12 @@ on:
 
 jobs:
   deploy-dev:
-    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/deploy-dev') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/dev') }}
     runs-on: ubuntu-latest
     environment: dev
+    permissions:
+      pull-requests: write
+      issues: write
     steps:
       - name: React to comment
         uses: actions/github-script@v6
@@ -80,5 +83,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'didn't work :('
+              body: "didn't work :("
             })
