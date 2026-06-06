@@ -1,4 +1,4 @@
-name: deploy to nest
+name: deploy to prod
 
 on:
   push:
@@ -20,6 +20,6 @@ jobs:
           script: |
             cd nobelium
             git pull origin main
-            chmod +x scripts/deploy.sh
-            nohup ./scripts/deploy.sh > deploy_log.txt 2>&1 < /dev/null &
+            chmod +x scripts/deploy-prod.sh
+            nohup ./scripts/deploy-prod.sh > deploy_log.txt 2>&1 < /dev/null &
             disown

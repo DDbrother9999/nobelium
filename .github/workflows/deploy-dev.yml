@@ -1,0 +1,84 @@
+name: deploy to dev
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  deploy-dev:
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/deploy-dev') }}
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: React to comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'rocket'
+            })
+
+      - name: Get PR branch
+        id: get-branch
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const request = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            }
+            core.info(`Getting PR #${request.pull_number} from ${request.owner}/${request.repo}`)
+            try {
+              const result = await github.rest.pulls.get(request)
+              return result.data.head.ref
+            } catch (err) {
+              core.setFailed(`Request failed with error ${err}`)
+            }
+          result-encoding: string
+
+      - name: build and deploy
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            if [ ! -d "nobelium-dev" ]; then
+              git clone git@github.com:${{ github.repository }}.git nobelium-dev
+            fi
+            cd nobelium-dev
+            git fetch origin
+            git reset --hard
+            git clean -fd
+            git checkout -B ${{ steps.get-branch.outputs.result }} origin/${{ steps.get-branch.outputs.result }}
+            chmod +x scripts/deploy-dev.sh
+            nohup ./scripts/deploy-dev.sh > deploy_log.txt 2>&1 < /dev/null &
+            disown
+
+      - name: success
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'done! live at http://dev.nobelium.ddbrother.me/'
+            })
+
+      - name: failed
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'didn't work :('
+            })
