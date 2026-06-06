@@ -51,7 +51,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             if [ ! -d "nobelium-dev" ]; then
-              git clone git@github.com:${{ github.repository }}.git nobelium-dev
+              git clone https://github.com/${{ github.repository }}.git nobelium-dev
             fi
             cd nobelium-dev
             git fetch origin
@@ -83,5 +83,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "didn't work :("
+              body: "it probably worked! live at http://dev.nobelium.ddbrother.me/"
             })
