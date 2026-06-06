@@ -157,8 +157,7 @@ main {
   color: var(--primary);
 }
 
-.nav-link:hover,
-.nav-link.active {
+.nav-link:hover {
   color: var(--foreground);
   background-color: var(--accent-yellow);
 }

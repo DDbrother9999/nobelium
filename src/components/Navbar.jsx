@@ -1,49 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams, usePathname } from "next/navigation";
-import { Suspense } from "react";
 import { Search, User } from "lucide-react";
 
-const subjects = ["Biology", "Chemistry", "Physics", "Computer Science", "Psychology", "Environmental Science"];
-
-function ActiveSubjectLinks() {
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const activeSubject = pathname === "/articles" ? searchParams.get("subject") : null;
-
-  return (
-    <>
-      {subjects.map(sub => (
-        <Link
-          href={`/articles?subject=${encodeURIComponent(sub)}`}
-          key={sub}
-          className={`nav-link${activeSubject === sub ? " active" : ""}`}
-        >
-          {sub}
-        </Link>
-      ))}
-    </>
-  );
-}
-
-function StaticSubjectLinks() {
-  return (
-    <>
-      {subjects.map(sub => (
-        <Link
-          href={`/articles?subject=${encodeURIComponent(sub)}`}
-          key={sub}
-          className="nav-link"
-        >
-          {sub}
-        </Link>
-      ))}
-    </>
-  );
-}
-
 export default function Navbar() {
+  const subjects = ["Biology", "Chemistry", "Physics", "Computer Science", "Psychology", "Environmental Science"];
+
   return (
     <header className="site-header">
       <div className="container">
@@ -63,9 +25,11 @@ export default function Navbar() {
         </div>
         <nav className="header-nav">
           <Link href="/" className="nav-link">Home</Link>
-          <Suspense fallback={<StaticSubjectLinks />}>
-            <ActiveSubjectLinks />
-          </Suspense>
+          {subjects.map(sub => (
+            <Link href={`/articles?subject=${encodeURIComponent(sub)}`} key={sub} className="nav-link">
+              {sub}
+            </Link>
+          ))}
         </nav>
       </div>
     </header>

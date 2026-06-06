@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import ArchiveClient from "./ArchiveClient";
 import connectMongo from "@/lib/mongodb";
 import Article from "@/models/Article";
@@ -22,9 +21,7 @@ export default async function ArticlesArchive() {
         <p style={{ fontSize: "1.1rem" }}>Explore all publications across our scientific disciplines.</p>
       </div>
 
-      <Suspense fallback={null}>
-        <ArchiveClient initialArticles={JSON.parse(JSON.stringify(articles))} />
-      </Suspense>
+      <ArchiveClient initialArticles={JSON.parse(JSON.stringify(articles))} />
     </div>
   );
 }
