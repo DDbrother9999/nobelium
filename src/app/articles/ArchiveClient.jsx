@@ -1,33 +1,42 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import ArticleCard from "@/components/ArticleCard";
 import { Search } from "lucide-react";
 
 export default function ArchiveClient({ initialArticles }) {
   const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const subjectFilter = searchParams.get("subject");
 
   const articles = useMemo(() => {
-    if (!query) return initialArticles;
-    
+    let pool = initialArticles;
+
+    if (subjectFilter) {
+      pool = pool.filter(a => a.subject === subjectFilter);
+    }
+
+    if (!query) return pool;
+
     const q = query.toLowerCase();
     const matching = [];
     const rest = [];
-    
-    for (const article of initialArticles) {
+
+    for (const article of pool) {
       const matchSubject = article.subject?.toLowerCase().includes(q);
       const matchTitle = article.title?.toLowerCase().includes(q);
       const matchAuthor = article.authorId?.name?.toLowerCase().includes(q);
-      
+
       if (matchSubject || matchTitle || matchAuthor) {
         matching.push(article);
       } else {
         rest.push(article);
       }
     }
-    
+
     return [...matching, ...rest];
-  }, [initialArticles, query]);
+  }, [initialArticles, query, subjectFilter]);
 
   return (
     <>

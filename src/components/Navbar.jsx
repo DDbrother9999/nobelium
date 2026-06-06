@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams, usePathname } from "next/navigation";
 import { Search, User } from "lucide-react";
 
 export default function Navbar() {
   const subjects = ["Biology", "Chemistry", "Physics", "Computer Science", "Psychology", "Environmental Science"];
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const activeSubject = pathname === "/articles" ? searchParams.get("subject") : null;
 
   return (
     <header className="site-header">
@@ -26,7 +30,11 @@ export default function Navbar() {
         <nav className="header-nav">
           <Link href="/" className="nav-link">Home</Link>
           {subjects.map(sub => (
-            <Link href={`/articles?subject=${encodeURIComponent(sub)}`} key={sub} className="nav-link">
+            <Link
+              href={`/articles?subject=${encodeURIComponent(sub)}`}
+              key={sub}
+              className={`nav-link${activeSubject === sub ? " active" : ""}`}
+            >
               {sub}
             </Link>
           ))}
