@@ -25,3 +25,4 @@ reach out to me! I can generate api keys for everything for you and help with se
 2. Run the application
 - ``npm run build``
 - ``pm2 start``
+
