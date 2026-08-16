@@ -7,7 +7,16 @@ if (!admin.apps.length) {
         credential: admin.credential.cert({
           projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
           clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          privateKey: (() => {
+            let key = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+            if (key) {
+              if (key.startsWith('"') && key.endsWith('"')) {
+                key = key.slice(1, -1);
+              }
+              return key.replace(/\\n/g, '\n');
+            }
+            return undefined;
+          })(),
         }),
       });
     }

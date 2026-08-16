@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   //outputFileTracingRoot: '/Users/ddbrother/Github/nobelium',
+  serverExternalPackages: ['jsdom'],
 
   experimental: {
     // Set client-side router cache stale time to 0 so dynamic pages
