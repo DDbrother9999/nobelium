@@ -39,8 +39,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetch("/api/staff/profile")
       .then(res => res.json())
-      .then(data => {
+      .then(async data => {
         if (!data.success) {
+          await fetch("/api/auth/logout", { method: "POST" });
           router.push("/staff/login");
         } else if (data.user.role !== "Admin" && data.user.role !== "Subject Editor") {
           router.push("/staff/dashboard");

@@ -6,6 +6,8 @@
     "dev": "env-cmd -f .env.dev next dev",
     "build": "env-cmd -f .env.dev next build",
     "start": "env-cmd -f .env.dev next start",
+    "build:prod": "next build",
+    "start:prod": "next start",
     "lint": "env-cmd -f .env.dev eslint",
     "bootstrap-admin": "env-cmd -f .env.dev node scripts/bootstrap-admin.js"
   },
