@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import AdmZip from "adm-zip";
-import { JSDOM } from "jsdom";
 import fs from "fs/promises";
 import path from "path";
 import connectMongo from "@/lib/mongodb";
@@ -113,6 +112,8 @@ export async function POST(request) {
     rawHtmlArray.sort((a, b) => a.name.localeCompare(b.name));
 
     let finalHtml = "";
+
+    const { JSDOM } = await import("jsdom");
 
     for (const htmlFile of rawHtmlArray) {
       const dom = new JSDOM(htmlFile.content);
