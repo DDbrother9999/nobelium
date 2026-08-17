@@ -1,25 +1,25 @@
-name: deploy to prod
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    environment: prod
-    continue-on-error: true
-    steps:
-      - name: build and deploy
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd nobelium
-            git pull origin main
-            chmod +x scripts/deploy-prod.sh
-            nohup ./scripts/deploy-prod.sh > deploy_log.txt 2>&1 < /dev/null &
-            disown
+#name: deploy to prod
+#
+#on:
+#  push:
+#    branches:
+#      - main
+#
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
+#    environment: prod
+#    continue-on-error: true
+#    steps:
+#      - name: build and deploy
+#        uses: appleboy/ssh-action@v1.2.5
+#        with:
+#          host: ${{ secrets.VM_HOST }}
+#          username: ${{ secrets.VM_USERNAME }}
+#          key: ${{ secrets.SSH_PRIVATE_KEY }}
+#          script: |
+#            cd nobelium
+#            git pull origin main
+#            chmod +x scripts/deploy-prod.sh
+#            nohup ./scripts/deploy-prod.sh > deploy_log.txt 2>&1 < /dev/null &
+#            disown
