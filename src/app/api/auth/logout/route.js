@@ -1,11 +1,12 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { SESSION_COOKIE_NAME } from "@/lib/session";
 
 export async function POST() {
   try {
     const cookieStore = await cookies();
-    if (cookieStore.has("session")) {
-      cookieStore.delete("session");
+    if (cookieStore.has(SESSION_COOKIE_NAME)) {
+      cookieStore.delete(SESSION_COOKIE_NAME);
     }
     
     return NextResponse.json({ status: "success" });

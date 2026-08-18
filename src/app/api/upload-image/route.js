@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebaseAdmin";
-import connectMongo from "@/lib/mongodb";
-import User from "@/models/User";
 import { s3Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "@/lib/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getAuthenticatedUser } from "@/lib/session";
 
 export async function POST(request) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
-    await connectMongo();
-    const user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const user = await getAuthenticatedUser(request);
     if (!user || !["Admin", "Subject Editor", "Staff"].includes(user.role)) {
       return NextResponse.json({ error: "Forbidden: Unauthorized role" }, { status: 403 });
     }

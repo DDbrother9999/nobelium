@@ -11,7 +11,7 @@ tech stack
 
 - mongodb atlas for article + general storage
 - r2 object storage for images + other media
-- firebase for google authentication
+- google oauth for authentication
 
 # To run this locally (suggestion):
 
@@ -20,9 +20,8 @@ reach out to me! I can generate api keys for everything for you and help with se
 # To run this yourself independently:
 
 1. Keys
-- populate them yourself using MongoDB Atlas and Firebase for Google authentication and r2 cloudflare; see .example.env.dev for an example .env.dev
+- populate them yourself using MongoDB Atlas, Google OAuth, and R2 Cloudflare; see .example.env.dev for an example .env.dev
 
 2. Run the application
 - ``npm run build``
 - ``pm2 start``
-

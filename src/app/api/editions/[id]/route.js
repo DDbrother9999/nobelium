@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import Edition from "@/models/Edition";
-import User from "@/models/User";
-import { adminAuth } from "@/lib/firebaseAdmin";
+import { getAuthenticatedUser } from "@/lib/session";
 
 export async function PATCH(request, { params }) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
     await connectMongo();
     
-    const user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const user = await getAuthenticatedUser(request);
     if (!user || (user.role !== "Admin" && user.role !== "Subject Editor")) {
       return NextResponse.json({ error: "Forbidden: Admins or Subject Editors only" }, { status: 403 });
     }

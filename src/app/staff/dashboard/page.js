@@ -49,7 +49,7 @@ export default function StaffDashboard() {
           }
         }
       } else {
-        await fetch("/api/auth/logout", { method: "POST" });
+       // await fetch("/api/auth/logout", { method: "POST" });
         window.location.href = "/staff/login";
       }
     } catch (err) {

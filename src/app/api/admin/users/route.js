@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebaseAdmin";
 import connectMongo from "@/lib/mongodb";
 import User from "@/models/User";
+import { getAuthenticatedUser } from "@/lib/session";
 
 export async function GET(request) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
     await connectMongo();
-    const adminUser = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const adminUser = await getAuthenticatedUser(request);
     if (!adminUser || adminUser.role !== "Admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -24,12 +20,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
     await connectMongo();
-    const adminUser = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const adminUser = await getAuthenticatedUser(request);
     if (!adminUser || adminUser.role !== "Admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -71,12 +63,8 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
     await connectMongo();
-    const adminUser = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const adminUser = await getAuthenticatedUser(request);
     if (!adminUser || adminUser.role !== "Admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

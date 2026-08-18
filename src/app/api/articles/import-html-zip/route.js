@@ -5,21 +5,15 @@ import path from "path";
 import connectMongo from "@/lib/mongodb";
 import Article from "@/models/Article";
 import Edition from "@/models/Edition";
-import User from "@/models/User";
 import slugify from "slugify";
-import { adminAuth } from "@/lib/firebaseAdmin";
 import { s3Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "@/lib/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getAuthenticatedUser } from "@/lib/session";
 
 export async function POST(request) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
-    
     await connectMongo();
-    const user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ error: "User not found in database" }, { status: 404 });
     if (user.role !== "Admin" && user.role !== "Editor") {
       return NextResponse.json({ error: "Forbidden: Admins or Editors only" }, { status: 403 });

@@ -27,8 +27,6 @@
     "@tiptap/starter-kit": "^3.24.0",
     "adm-zip": "^0.5.17",
     "env-cmd": "^11.0.0",
-    "firebase": "^12.14.0",
-    "firebase-admin": "^13.10.0",
     "framer-motion": "^12.40.0",
     "jsdom": "^29.1.1",
     "lucide-react": "^1.17.0",

@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import Article from "@/models/Article";
-import User from "@/models/User";
 import slugify from "slugify";
-import { adminAuth } from "@/lib/firebaseAdmin";
+import { getAuthenticatedUser } from "@/lib/session";
 
 export async function GET(request) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
     await connectMongo();
-    const user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const user = await getAuthenticatedUser(request);
     
     if (!user || !["Admin", "Subject Editor", "Staff"].includes(user.role)) {
       return NextResponse.json({ error: "Forbidden: Unauthorized role" }, { status: 403 });
@@ -47,13 +42,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
-
     await connectMongo();
-    const user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ error: "User not found in database" }, { status: 404 });
     if (!["Admin", "Subject Editor", "Staff"].includes(user.role)) {
       return NextResponse.json({ error: "Forbidden: Unauthorized role" }, { status: 403 });

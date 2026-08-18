@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import Article from "@/models/Article";
-import User from "@/models/User";
-import { adminAuth } from "@/lib/firebaseAdmin";
 import { s3Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "@/lib/s3";
 import { CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import Edition from "@/models/Edition";
+import { getAuthenticatedUser } from "@/lib/session";
 
 export async function PUT(request, { params }) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
     await connectMongo();
-    const user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const user = await getAuthenticatedUser(request);
     if (!["Admin", "Subject Editor", "Staff"].includes(user?.role)) {
       return NextResponse.json({ error: "Forbidden: Unauthorized role" }, { status: 403 });
     }
@@ -134,11 +130,8 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
     await connectMongo();
-    const user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const user = await getAuthenticatedUser(request);
     if (!["Admin", "Subject Editor", "Staff"].includes(user?.role)) {
       return NextResponse.json({ error: "Forbidden: Unauthorized role" }, { status: 403 });
     }

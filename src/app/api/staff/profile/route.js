@@ -1,17 +1,9 @@
 import { NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebaseAdmin";
-import connectMongo from "@/lib/mongodb";
-import User from "@/models/User";
+import { getAuthenticatedUser } from "@/lib/session";
 
 export async function GET(request) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
-    await connectMongo();
-    
-    const user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     return NextResponse.json({ success: true, user });
@@ -22,13 +14,7 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    const session = request.cookies.get("session")?.value;
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decodedClaims = await adminAuth.verifySessionCookie(session);
-    await connectMongo();
-    
-    const user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body = await request.json();
