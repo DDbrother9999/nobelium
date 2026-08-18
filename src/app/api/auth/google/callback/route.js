@@ -32,8 +32,9 @@ function expireOAuthCookie(response, name) {
 }
 
 export async function GET(request) {
+  const baseUrl = process.env.APP_URL || request.url;
   const callbackUrl = new URL(request.url);
-  const loginUrl = new URL("/staff/login", request.url);
+  const loginUrl = new URL("/staff/login", baseUrl);
 
   try {
     const code = callbackUrl.searchParams.get("code");
@@ -85,7 +86,7 @@ export async function GET(request) {
       email,
     });
 
-    const response = NextResponse.redirect(new URL(nextPath, request.url));
+    const response = NextResponse.redirect(new URL(nextPath, baseUrl));
     response.cookies.set(SESSION_COOKIE_NAME, sessionToken, getSessionCookieOptions());
     expireOAuthCookie(response, GOOGLE_OAUTH_STATE_COOKIE);
     expireOAuthCookie(response, GOOGLE_OAUTH_NEXT_COOKIE);
