@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useToast, ToastContainer } from "@/components/useToast";
+import { SUBJECTS } from "@/lib/subjects";
 
 export default function ClientArticleEditor({ initialArticle, users, editions }) {
   const router = useRouter();
@@ -176,12 +177,7 @@ export default function ClientArticleEditor({ initialArticle, users, editions })
               <div className="form-group">
                 <label>Subject</label>
                 <select value={subject} onChange={e => setSubject(e.target.value)}>
-                  <option value="Biology">Biology</option>
-                  <option value="Chemistry">Chemistry</option>
-                  <option value="Physics">Physics</option>
-                  <option value="Computer Science">Computer Science</option>
-                  <option value="Psychology">Psychology</option>
-                  <option value="Environmental Science">Environmental Science</option>
+                  {SUBJECTS.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                 </select>
               </div>
               <div className="form-group">

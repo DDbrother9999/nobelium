@@ -24,7 +24,7 @@ export async function GET(request) {
 
     const articles = await Article.find(query)
       .sort({ createdAt: -1 })
-      .select("title slug status subject editionId createdAt updatedAt authorId")
+      .select("title slug status subject editionId createdAt updatedAt authorId isFeatured isCoverStory")
       .lean();
 
     return NextResponse.json({

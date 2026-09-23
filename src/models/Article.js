@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { SUBJECTS } from "../lib/subjects";
 
 const ArticleSchema = new mongoose.Schema(
   {
@@ -22,14 +23,7 @@ const ArticleSchema = new mongoose.Schema(
     },
     subject: {
       type: String,
-      enum: [
-        "Biology",
-        "Chemistry",
-        "Physics",
-        "Computer Science",
-        "Psychology",
-        "Environmental Science",
-      ],
+      enum: SUBJECTS,
       required: true,
     },
     tags: {
@@ -70,8 +64,14 @@ const ArticleSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isCoverStory: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
+
+ArticleSchema.index({ isCoverStory: 1 }, { unique: true, partialFilterExpression: { isCoverStory: true } });
 
 export default mongoose.models.Article || mongoose.model("Article", ArticleSchema);

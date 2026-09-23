@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 
+const PUBLIC_PATHS = new Set(['/staff', '/staff/login']);
+
 export async function proxy(request) {
   const session = request.cookies.get('session');
   
   if (request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/staff')) {
-    if (!session && request.nextUrl.pathname !== '/staff/login') {
+    if (!session && !PUBLIC_PATHS.has(request.nextUrl.pathname)) {
       return NextResponse.redirect(new URL('/staff/login', process.env.APP_URL));
     }
   }

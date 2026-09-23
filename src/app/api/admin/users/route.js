@@ -70,9 +70,9 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    const { id, name, email, role, managedSubjects } = body;
+    const { id, name, email, role, managedSubjects, title, bio } = body;
 
-    if (!id || !email || !role) {
+    if (!id || email === "" || role === "") {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -81,13 +81,15 @@ export async function PUT(request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    existingUser.name = name || existingUser.name;
-    existingUser.email = email;
-    existingUser.role = role;
-    if (role === "Subject Editor") {
-      existingUser.managedSubjects = managedSubjects || [];
-    } else {
+    if (name) existingUser.name = name;
+    if (email) existingUser.email = email;
+    if (role) existingUser.role = role;
+    if (typeof title === "string") existingUser.title = title.trim();
+    if (typeof bio === "string") existingUser.bio = bio.trim();
+    if (existingUser.role !== "Subject Editor") {
       existingUser.managedSubjects = [];
+    } else if (Array.isArray(managedSubjects)) {
+      existingUser.managedSubjects = managedSubjects;
     }
     await existingUser.save();
     return NextResponse.json({ success: true, user: existingUser });

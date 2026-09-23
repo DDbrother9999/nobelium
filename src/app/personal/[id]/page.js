@@ -50,11 +50,13 @@ export default async function AuthorProfile({ params }) {
             {author.name}
           </h1>
           <span style={{ display: "inline-block", backgroundColor: "var(--primary)", color: "#ffffff", padding: "0.2rem 0.6rem", borderRadius: "4px", fontSize: "0.85rem", fontWeight: "bold", marginBottom: "1rem" }}>
-            {author.role}
+            {author.title || author.role}
           </span>
-          <p style={{ margin: 0, color: "#111111", lineHeight: "1.6", fontSize: "1.1rem" }}>
-            {author.bio || "Staff at Nobelium."}
-          </p>
+          {author.bio && (
+            <p style={{ margin: 0, color: "#111111", lineHeight: "1.6", fontSize: "1.1rem" }}>
+              {author.bio}
+            </p>
+          )}
         </div>
       </div>
 

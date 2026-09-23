@@ -19,7 +19,6 @@ export default async function ArticlesArchive() {
     <div className="container" style={{ padding: "4rem 1.5rem" }}>
       <div style={{ marginBottom: "3rem", textAlign: "center" }}>
         <h1 style={{ fontSize: "2.5rem", color: "var(--primary)" }}>Article Archive</h1>
-        <p style={{ fontSize: "1.1rem" }}>Explore all publications across our scientific disciplines.</p>
       </div>
 
       <Suspense fallback={null}>

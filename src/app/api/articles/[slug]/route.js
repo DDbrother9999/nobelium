@@ -5,6 +5,9 @@ import { s3Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "@/lib/s3";
 import { CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import Edition from "@/models/Edition";
 import { getAuthenticatedUser } from "@/lib/session";
+import { MAX_FEATURED } from "@/lib/homepage";
+
+const EDITABLE_FIELDS = ["title", "slug", "subject", "content", "headerImageUrl", "imageBank", "authorId", "editionId", "status"];
 
 export async function PUT(request, { params }) {
   try {
@@ -27,7 +30,12 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Forbidden: You can only edit your own articles" }, { status: 403 });
     }
 
-    const body = await request.json();
+    const input = await request.json();
+    const body = Object.fromEntries(EDITABLE_FIELDS.filter(field => field in input).map(field => [field, input[field]]));
+    if (body.status && body.status !== "Published") {
+      body.isFeatured = false;
+      body.isCoverStory = false;
+    }
     if (body.subject && user.role === "Subject Editor" && !user.managedSubjects.includes(body.subject)) {
       return NextResponse.json({ error: "Forbidden: Cannot change to an unmanaged subject" }, { status: 403 });
     }
@@ -128,6 +136,74 @@ export async function PUT(request, { params }) {
   }
 }
 
+export async function PATCH(request, { params }) {
+  try {
+    await connectMongo();
+    const user = await getAuthenticatedUser(request);
+    if (user?.role !== "Admin") {
+      return NextResponse.json({ error: "Forbidden: Only admins can change homepage placement" }, { status: 403 });
+    }
+
+    const { slug } = await params;
+    const article = await Article.findOne({ slug, isDeleted: { $ne: true } });
+    if (!article) return NextResponse.json({ error: "Article not found" }, { status: 404 });
+
+    const body = await request.json();
+    const update = {};
+    if (typeof body.isCoverStory === "boolean") update.isCoverStory = body.isCoverStory;
+    if (typeof body.isFeatured === "boolean") update.isFeatured = body.isFeatured;
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+    }
+
+    if ((update.isCoverStory || update.isFeatured) && article.status !== "Published") {
+      return NextResponse.json({ error: "Only published articles can be placed on the homepage" }, { status: 400 });
+    }
+
+    if (update.isFeatured && update.isCoverStory) {
+      return NextResponse.json({ error: "An article can't be both the cover story and featured" }, { status: 400 });
+    }
+
+    if (update.isFeatured && !article.isFeatured) {
+      if (article.isCoverStory) {
+        return NextResponse.json({ error: "The cover story can't also be featured" }, { status: 400 });
+      }
+      const featuredCount = await Article.countDocuments({
+        isFeatured: true,
+        isDeleted: { $ne: true },
+        status: "Published",
+      });
+      if (featuredCount >= MAX_FEATURED) {
+        return NextResponse.json({ error: `Only ${MAX_FEATURED} articles can be featured. Unfeature one first.` }, { status: 400 });
+      }
+    }
+
+    if (update.isCoverStory) {
+      update.isFeatured = false;
+      await Article.updateMany({ _id: { $ne: article._id }, isCoverStory: true }, { $set: { isCoverStory: false } });
+    }
+
+    let updatedArticle;
+    try {
+      updatedArticle = await Article.findByIdAndUpdate(article._id, { $set: update }, { new: true })
+        .select("slug isFeatured isCoverStory")
+        .lean();
+    } catch (error) {
+      if (error.code === 11000) {
+        return NextResponse.json({ error: "The cover story was changed at the same time. Refresh and try again." }, { status: 409 });
+      }
+      throw error;
+    }
+
+    return NextResponse.json({ success: true, article: updatedArticle }, {
+      headers: { 'Cache-Control': 'no-store' }
+    });
+  } catch (error) {
+    console.error("Homepage Placement Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request, { params }) {
   try {
     await connectMongo();
@@ -151,7 +227,7 @@ export async function DELETE(request, { params }) {
 
     const deletedArticle = await Article.findOneAndUpdate(
       { slug },
-      { $set: { isDeleted: true } },
+      { $set: { isDeleted: true, isFeatured: false, isCoverStory: false } },
       { new: true }
     );
 

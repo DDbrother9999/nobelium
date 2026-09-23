@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { SUBJECTS } from "../lib/subjects";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -10,6 +11,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+    },
+    title: {
+      type: String,
+      default: "",
     },
     bio: {
       type: String,
@@ -34,14 +39,7 @@ const UserSchema = new mongoose.Schema(
     },
     managedSubjects: {
       type: [String],
-      enum: [
-        "Biology",
-        "Chemistry",
-        "Physics",
-        "Computer Science",
-        "Psychology",
-        "Environmental Science",
-      ],
+      enum: SUBJECTS,
       default: [],
     },
   },

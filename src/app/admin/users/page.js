@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useToast, ToastContainer } from "@/components/useToast";
 import Link from "next/link";
 import { ArrowLeft, UserPlus } from "lucide-react";
-
-const ALL_SUBJECTS = ["Biology", "Chemistry", "Physics", "Computer Science", "Psychology", "Environmental Science"];
+import { SUBJECTS } from "@/lib/subjects";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -125,19 +124,17 @@ export default function AdminUsersPage() {
     setEditingCell({ id: u._id, field });
     if (field === "name") setEditValue(u.name || "");
     if (field === "email") setEditValue(u.email || "");
+    if (field === "title") setEditValue(u.title || "");
+    if (field === "bio") setEditValue(u.bio || "");
     if (field === "role") setEditValue(u.role || "Staff");
     if (field === "subjects") setEditSubjects(u.managedSubjects || []);
   };
 
   const handleInlineSave = async (u) => {
     try {
-      const payload = {
-        id: u._id,
-        name: editingCell.field === "name" ? editValue : u.name,
-        email: editingCell.field === "email" ? editValue : u.email,
-        role: editingCell.field === "role" ? editValue : u.role,
-        managedSubjects: editingCell.field === "subjects" ? editSubjects : u.managedSubjects,
-      };
+      const payload = editingCell.field === "subjects"
+        ? { id: u._id, managedSubjects: editSubjects }
+        : { id: u._id, [editingCell.field]: editValue };
 
       const res = await fetch("/api/admin/users", {
         method: "PUT",
@@ -161,11 +158,12 @@ export default function AdminUsersPage() {
     const isEditing = editingCell.id === u._id && editingCell.field === field;
 
     if (isEditing) {
-      if (field === "name" || field === "email") {
+      if (field === "name" || field === "email" || field === "title") {
         return (
           <input
             autoFocus
             type={field === "email" ? "email" : "text"}
+            placeholder={field === "title" ? u.role : undefined}
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={(e) => {
@@ -195,6 +193,25 @@ export default function AdminUsersPage() {
           </select>
         );
       }
+      if (field === "bio") {
+        return (
+          <div>
+            <textarea
+              autoFocus
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setEditingCell({ id: null, field: null });
+              }}
+              style={{ width: "100%", height: "120px", padding: "0.5rem", border: "1px solid var(--primary)", outline: "none", boxSizing: "border-box", fontFamily: "inherit", fontSize: "0.9rem" }}
+            />
+            <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+              <button onClick={() => handleInlineSave(u)} style={{ background: "var(--primary)", color: "#fff", padding: "0.4rem 0.8rem", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Save</button>
+              <button onClick={() => setEditingCell({ id: null, field: null })} style={{ background: "#ccc", color: "#000", padding: "0.4rem 0.8rem", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
+            </div>
+          </div>
+        );
+      }
       if (field === "subjects") {
         if (u.role !== "Subject Editor") return <span style={{ color: "#aaa" }}>N/A</span>;
         
@@ -210,7 +227,7 @@ export default function AdminUsersPage() {
                }}
                style={{ width: "100%", height: "120px", padding: "0.25rem", border: "1px solid var(--primary)", outline: "none", boxSizing: "border-box" }}
              >
-                {ALL_SUBJECTS.map(sub => (
+                {SUBJECTS.map(sub => (
                   <option key={sub} value={sub}>{sub}</option>
                 ))}
              </select>
@@ -227,6 +244,12 @@ export default function AdminUsersPage() {
     let displayValue = null;
     if (field === "name") displayValue = u.name;
     if (field === "email") displayValue = u.email;
+    if (field === "title") displayValue = u.title || <span style={{ color: "#aaa" }}>{u.role}</span>;
+    if (field === "bio") {
+      displayValue = u.bio
+        ? <span style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{u.bio}</span>
+        : <span style={{ color: "#ccc" }}>—</span>;
+    }
     if (field === "role") {
       displayValue = (
         <span style={{ 
@@ -320,7 +343,7 @@ export default function AdminUsersPage() {
               <div style={{ background: "#fafafa", padding: "1rem", border: "1px solid var(--border)", marginTop: "0.5rem" }}>
                 <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Managed Subjects</label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-                  {ALL_SUBJECTS.map(sub => (
+                  {SUBJECTS.map(sub => (
                     <label key={sub} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
                       <input 
                         type="checkbox" 
@@ -385,10 +408,12 @@ export default function AdminUsersPage() {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
                 <thead>
                   <tr style={{ borderBottom: "2px solid var(--border)", textAlign: "left" }}>
-                    <th style={{ padding: "0.75rem 0.5rem", width: "20%" }}>Name</th>
-                    <th style={{ padding: "0.75rem 0.5rem", width: "25%" }}>Email</th>
-                    <th style={{ padding: "0.75rem 0.5rem", width: "15%" }}>Role</th>
-                    <th style={{ padding: "0.75rem 0.5rem", width: "40%" }}>Subjects</th>
+                    <th style={{ padding: "0.75rem 0.5rem", width: "14%" }}>Name</th>
+                    <th style={{ padding: "0.75rem 0.5rem", width: "18%" }}>Email</th>
+                    <th style={{ padding: "0.75rem 0.5rem", width: "11%" }}>Role</th>
+                    <th style={{ padding: "0.75rem 0.5rem", width: "14%" }}>Title</th>
+                    <th style={{ padding: "0.75rem 0.5rem", width: "15%" }}>Subjects</th>
+                    <th style={{ padding: "0.75rem 0.5rem", width: "28%" }}>Bio</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -397,12 +422,14 @@ export default function AdminUsersPage() {
                       <td style={{ padding: "0", verticalAlign: "top" }}>{renderCell(u, "name")}</td>
                       <td style={{ padding: "0", verticalAlign: "top" }}>{renderCell(u, "email")}</td>
                       <td style={{ padding: "0", verticalAlign: "top" }}>{renderCell(u, "role")}</td>
+                      <td style={{ padding: "0", verticalAlign: "top" }}>{renderCell(u, "title")}</td>
                       <td style={{ padding: "0", verticalAlign: "top" }}>{renderCell(u, "subjects")}</td>
+                      <td style={{ padding: "0", verticalAlign: "top" }}>{renderCell(u, "bio")}</td>
                     </tr>
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan="4" style={{ padding: "1rem", textAlign: "center", color: "#888" }}>No users found.</td>
+                      <td colSpan="6" style={{ padding: "1rem", textAlign: "center", color: "#888" }}>No users found.</td>
                     </tr>
                   )}
                 </tbody>

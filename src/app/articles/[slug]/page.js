@@ -5,6 +5,7 @@ import Article from "@/models/Article";
 import UserSchema from "@/models/User";
 import Edition from "@/models/Edition";
 import { notFound } from "next/navigation";
+import { formatArticleDate } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function SingleArticle({ params }) {
   }
 
   return (
-    <article className="container" style={{ paddingBottom: "4rem" }}>
+    <article className="container" style={{ paddingTop: "2rem", paddingBottom: "4rem" }}>
       <div style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border)", paddingBottom: "1rem" }}>
         <Link href="/articles" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", color: "var(--primary)", fontWeight: "bold", marginBottom: "1rem" }}>
           <ArrowLeft size={16} /> Back to Articles
@@ -41,7 +42,7 @@ export default async function SingleArticle({ params }) {
             <User size={16} /> {article.authorId?.name || "Staff Writer"}
           </Link>
           <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Calendar size={16} /> {new Date(article.publishedAt || (article.editionId && article.editionId.releaseDate) || article.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+            <Calendar size={16} /> {formatArticleDate(article, "long")}
           </span>
         </div>
       </div>
@@ -83,9 +84,11 @@ export default async function SingleArticle({ params }) {
                 {article.authorId.name}
               </h3>
             </Link>
-            <p style={{ margin: 0, color: "#111111", lineHeight: "1.6", fontSize: "1rem" }}>
-              {article.authorId.bio || `Staff at Nobelium.`}
-            </p>
+            {article.authorId.bio && (
+              <p style={{ margin: 0, color: "#111111", lineHeight: "1.6", fontSize: "1rem" }}>
+                {article.authorId.bio}
+              </p>
+            )}
           </div>
         </div>
       )}

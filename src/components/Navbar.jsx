@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useSearchParams, usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { Search, User } from "lucide-react";
-
-const subjects = ["Biology", "Chemistry", "Physics", "Computer Science", "Psychology", "Environmental Science"];
+import { SUBJECTS, subjectHref } from "@/lib/subjects";
 
 function ActiveSubjectLinks() {
   const searchParams = useSearchParams();
@@ -14,9 +13,9 @@ function ActiveSubjectLinks() {
 
   return (
     <>
-      {subjects.map(sub => (
+      {SUBJECTS.map(sub => (
         <Link
-          href={`/articles?subject=${encodeURIComponent(sub)}`}
+          href={subjectHref(sub)}
           key={sub}
           className={`nav-link${activeSubject === sub ? " active" : ""}`}
         >
@@ -30,12 +29,8 @@ function ActiveSubjectLinks() {
 function StaticSubjectLinks() {
   return (
     <>
-      {subjects.map(sub => (
-        <Link
-          href={`/articles?subject=${encodeURIComponent(sub)}`}
-          key={sub}
-          className="nav-link"
-        >
+      {SUBJECTS.map(sub => (
+        <Link href={subjectHref(sub)} key={sub} className="nav-link">
           {sub}
         </Link>
       ))}
@@ -46,27 +41,17 @@ function StaticSubjectLinks() {
 export default function Navbar() {
   return (
     <header className="site-header">
-      <div className="container">
-        <div className="header-top">
-          <div className="header-left">
-            {/* Space for consistency */}
-          </div>
-          <div className="header-logo">
-            <Link href="/">
-              <span className="logo-text">Nobelium</span>
-            </Link>
-          </div>
-          <div className="header-right">
-            <Link href="/login" aria-label="Author Login"><User size={22} /></Link>
-            <button className="search-btn" aria-label="Search"><Search size={22} /></button>
-          </div>
-        </div>
+      <div className="container header-bar">
+        <Link href="/" className="logo-text">Nobelium</Link>
         <nav className="header-nav">
-          <Link href="/" className="nav-link">Home</Link>
           <Suspense fallback={<StaticSubjectLinks />}>
             <ActiveSubjectLinks />
           </Suspense>
         </nav>
+        <div className="header-actions">
+          <button className="search-btn" aria-label="Search"><Search size={20} /></button>
+          <Link href="/login" aria-label="Author Login"><User size={20} /></Link>
+        </div>
       </div>
     </header>
   );

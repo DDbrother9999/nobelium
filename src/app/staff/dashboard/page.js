@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Settings, LogOut, FileText } from "lucide-react";
-
-const SUBJECTS = [
-  "Biology",
-  "Chemistry",
-  "Physics",
-  "Computer Science",
-  "Psychology",
-  "Environmental Science",
-];
+import { SUBJECTS } from "@/lib/subjects";
 
 export default function StaffDashboard() {
   const [articles, setArticles] = useState([]);

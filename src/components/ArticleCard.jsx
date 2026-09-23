@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { Calendar, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { formatArticleDate } from "@/lib/dates";
 
 export default function ArticleCard({ article }) {
   const router = useRouter();
-  const articleDate = article.publishedAt || (article.editionId && article.editionId.releaseDate) || article.createdAt;
 
   return (
     <div 
@@ -19,17 +19,22 @@ export default function ArticleCard({ article }) {
         if (e.key === "Enter") router.push(`/articles/${article.slug}`);
       }}
     >
-      <div className="card-image" style={{ backgroundImage: `url(${article.headerImageUrl || 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&q=80&w=800'})` }}>
-        <span className="subject-tag">{article.subject || "Science"}</span>
-      </div>
+      {article.headerImageUrl && (
+        <div className="card-image" style={{ backgroundImage: `url(${article.headerImageUrl})` }}>
+          <span className="subject-tag">{article.subject || "Science"}</span>
+        </div>
+      )}
       <div className="card-content">
+        {!article.headerImageUrl && (
+          <span className="subject-tag" style={{ position: "static", alignSelf: "flex-start", marginBottom: "0.75rem" }}>{article.subject || "Science"}</span>
+        )}
         <h3>
           <Link href={`/articles/${article.slug}`} style={{ textDecoration: 'none', color: 'inherit' }} onClick={(e) => e.stopPropagation()}>
             {article.title}
           </Link>
         </h3>
         <p className="excerpt">
-          {article.content?.substring(0, 120).replace(/<[^>]+>/g, '') || "Explore the fascinating world of science in our latest publication."}...
+          {article.content && `${article.content.substring(0, 120).replace(/<[^>]+>/g, '')}...`}
         </p>
         <div className="card-meta">
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
@@ -48,7 +53,7 @@ export default function ArticleCard({ article }) {
             )}
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <Calendar size={14} /> {articleDate ? new Date(articleDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "Draft"}
+            <Calendar size={14} /> {formatArticleDate(article) || "Draft"}
           </span>
         </div>
       </div>

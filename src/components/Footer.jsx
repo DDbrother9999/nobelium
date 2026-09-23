@@ -1,23 +1,43 @@
 import Link from "next/link";
+import BuildInfo from "@/components/BuildInfo";
+import { SUBJECTS, subjectHref } from "@/lib/subjects";
 
 export default function Footer() {
   return (
-    <footer style={{ borderTop: "1px solid var(--border)", padding: "4rem 0 2rem", marginTop: "auto", background: "var(--background)" }}>
-      <div className="container" style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "2rem" }}>
-        <div style={{ flex: "1 1 300px" }}>
-          <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem", color: "var(--primary)", fontFamily: "var(--font-serif)" }}>Nobelium</h2>
-          <p style={{ maxWidth: "300px", lineHeight: "1.6" }}>The News Site of Noble and Greenough School - Science Edition. Empowering student voices in STEM.</p>
+    <footer className="site-footer">
+      <div className="footer-rule" />
+      <div className="container footer-grid">
+        <div className="element-tile" aria-hidden="true">
+          <span className="element-number">102</span>
+          <span className="element-symbol">No</span>
+          <span className="element-name">Nobelium</span>
+          <span className="element-mass">[259]</span>
         </div>
-        <div style={{ display: "flex", gap: "4rem", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <h3 style={{ fontSize: "1rem", textTransform: "uppercase", letterSpacing: "1px", opacity: 0.5, marginBottom: "0.5rem" }}>Explore</h3>
-            <Link href="/articles" style={{ fontWeight: 600 }} className="footer-link">All Articles</Link>
-            <Link href="/about" style={{ fontWeight: 600 }} className="footer-link">About Us</Link>
-          </div>
+        <div className="footer-about">
+          <p className="footer-tagline">The Science Magazine of the Noble and Greenough School</p>
+          <p className="footer-text">Other text, placeholder</p>
+        </div>
+        <div className="footer-column">
+          <span className="footer-label">Sections</span>
+          {SUBJECTS.map(sub => (
+            <Link href={subjectHref(sub)} key={sub} className="footer-link">{sub}</Link>
+          ))}
+        </div>
+        <div className="footer-column">
+          <span className="footer-label">Nobelium</span>
+          <Link href="/articles" className="footer-link">All Articles</Link>
+          <Link href="/staff" className="footer-link">Staff</Link>
+          <Link href="/login" className="footer-link">Author login</Link>
         </div>
       </div>
-      <div className="container" style={{ marginTop: "4rem", paddingTop: "2rem", borderTop: "1px solid var(--border)", textAlign: "center", opacity: 0.5, fontSize: "0.9rem" }}>
-        &copy; {new Date().getFullYear()} Nobelium Online. All rights reserved.
+      <div className="container">
+        <div className="footer-wordmark" aria-hidden="true">Nobelium</div>
+      </div>
+      <div className="footer-bottom">
+        <div className="container footer-bottom-inner">
+          <BuildInfo year={new Date().getFullYear()} />
+          <span>Noble and Greenough School · Dedham, MA</span>
+        </div>
       </div>
     </footer>
   );

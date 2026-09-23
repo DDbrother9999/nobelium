@@ -4,21 +4,47 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast, ToastContainer } from "@/components/useToast";
-
-const SUBJECTS = [
-  "Biology",
-  "Chemistry",
-  "Physics",
-  "Computer Science",
-  "Psychology",
-  "Environmental Science",
-];
+import { MAX_FEATURED } from "@/lib/homepage";
+import { SUBJECTS } from "@/lib/subjects";
 
 const statusColors = {
   Published: "#004990",
   "Pending Review": "#6b5b00",
   Draft: "#666666",
 };
+
+function PlacementToggle({ article, field, label, onToggle }) {
+  const active = Boolean(article[field]);
+  let blockedReason;
+  if (!active && article.status !== "Published") blockedReason = "Publish the article to place it on the homepage";
+  else if (!active && field === "isFeatured" && article.isCoverStory) blockedReason = "The cover story can't also be featured";
+  return (
+    <button
+      type="button"
+      className="btn placement-toggle"
+      aria-pressed={active}
+      disabled={Boolean(blockedReason)}
+      title={blockedReason}
+      onClick={() => onToggle(article, field)}
+    >
+      {label}
+    </button>
+  );
+}
+
+function PlacementItem({ article, field, onToggle }) {
+  return (
+    <li style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "1rem", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid var(--border)" }}>
+      <span style={{ color: "#111111" }}>
+        {article.title}
+        {article.status !== "Published" && <span style={{ color: "#666", fontSize: "0.85rem" }}> ({article.status}, hidden)</span>}
+      </span>
+      <button type="button" className="btn placement-toggle" onClick={() => onToggle(article, field)}>
+        Remove
+      </button>
+    </li>
+  );
+}
 
 export default function AdminDashboard() {
   const [editions, setEditions] = useState([]);
@@ -33,6 +59,7 @@ export default function AdminDashboard() {
   ]);
   const [isCreatingDraft, setIsCreatingDraft] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [role, setRole] = useState("");
   const router = useRouter();
   const { toasts, toast } = useToast();
 
@@ -43,8 +70,11 @@ export default function AdminDashboard() {
         if (!data.success) {
           await fetch("/api/auth/logout", { method: "POST" });
           router.push("/staff/login");
-        } else if (data.user.role !== "Admin" && data.user.role !== "Subject Editor") {
-          router.push("/staff/dashboard");
+        } else {
+          setRole(data.user.role);
+          if (data.user.role !== "Admin" && data.user.role !== "Subject Editor") {
+            router.push("/staff/dashboard");
+          }
         }
       });
 
@@ -91,6 +121,34 @@ export default function AdminDashboard() {
     if (uncategorized.length > 0) groups.push({ subject: "Uncategorized", articles: uncategorized });
     return groups;
   }, [visibleArticles]);
+
+  const isAdmin = role === "Admin";
+  const coverStory = articles.find(article => article.isCoverStory);
+  const featuredArticles = articles.filter(article => article.isFeatured);
+  const featuredCount = featuredArticles.filter(article => article.status === "Published").length;
+
+  const handleTogglePlacement = async (article, field) => {
+    const value = !article[field];
+    try {
+      const res = await fetch(`/api/articles/${article.slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setArticles(prev => prev.map(a => {
+          if (a._id === article._id) return { ...a, isFeatured: data.article.isFeatured, isCoverStory: data.article.isCoverStory };
+          if (field === "isCoverStory" && value) return { ...a, isCoverStory: false };
+          return a;
+        }));
+      } else {
+        toast.error("Error: " + data.error);
+      }
+    } catch {
+      toast.error("Failed to update homepage placement.");
+    }
+  };
 
   const handleCreateEdition = async (e) => {
     e.preventDefault();
@@ -292,6 +350,36 @@ export default function AdminDashboard() {
         </div>
       </section>
 
+      {isAdmin && (
+        <section style={{ border: "1px solid var(--border)", padding: "1.5rem", marginBottom: "2rem" }}>
+          <h2 style={{ marginBottom: "1rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.75rem" }}>Homepage</h2>
+          <div className="admin-top-grid" style={{ alignItems: "start" }}>
+            <div>
+              <h3 style={{ fontSize: "1.1rem", color: "#111111" }}>Cover Story</h3>
+              {coverStory ? (
+                <ul style={{ listStyle: "none", padding: 0, borderTop: "1px solid var(--border)" }}>
+                  <PlacementItem article={coverStory} field="isCoverStory" onToggle={handleTogglePlacement} />
+                </ul>
+              ) : (
+                <p style={{ color: "#666", fontSize: "0.9rem", marginBottom: 0 }}>None marked. The newest article with a header image is used.</p>
+              )}
+            </div>
+            <div>
+              <h3 style={{ fontSize: "1.1rem", color: "#111111" }}>Featured ({featuredCount}/{MAX_FEATURED})</h3>
+              {featuredArticles.length > 0 ? (
+                <ul style={{ listStyle: "none", padding: 0, borderTop: "1px solid var(--border)" }}>
+                  {featuredArticles.map(article => (
+                    <PlacementItem key={article._id} article={article} field="isFeatured" onToggle={handleTogglePlacement} />
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ color: "#666", fontSize: "0.9rem", marginBottom: 0 }}>None marked. The Featured section is hidden.</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section style={{ border: "1px solid var(--border)", padding: "1.5rem", marginBottom: "2rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", marginBottom: "1rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.75rem" }}>
           <h2 style={{ marginBottom: 0 }}>Articles by Category</h2>
@@ -315,8 +403,14 @@ export default function AdminDashboard() {
               ) : (
                 <ul style={{ listStyle: "none", padding: 0, borderTop: "1px solid var(--border)" }}>
                   {group.articles.map(article => (
-                    <li key={article._id} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "1rem", alignItems: "center", padding: "0.75rem 0", borderBottom: "1px solid var(--border)" }}>
+                    <li key={article._id} style={{ display: "grid", gridTemplateColumns: isAdmin ? "1fr auto auto auto auto" : "1fr auto auto", gap: "1rem", alignItems: "center", padding: "0.75rem 0", borderBottom: "1px solid var(--border)" }}>
                       <strong style={{ color: "#111111" }}>{article.title}</strong>
+                      {isAdmin && (
+                        <>
+                          <PlacementToggle article={article} field="isCoverStory" label="Cover Story" onToggle={handleTogglePlacement} />
+                          <PlacementToggle article={article} field="isFeatured" label="Featured" onToggle={handleTogglePlacement} />
+                        </>
+                      )}
                       <span style={{ color: statusColors[article.status] || "#666666", border: "1px solid var(--border)", padding: "0.2rem 0.45rem", fontSize: "0.8rem" }}>
                         {article.status}
                       </span>
