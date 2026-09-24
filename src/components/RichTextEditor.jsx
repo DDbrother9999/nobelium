@@ -17,10 +17,26 @@ import {
   Image as ImageIcon, Link as LinkIcon, Unlink,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   ImageUp, List, ListOrdered, Quote, Minus, Loader2,
-  Upload, X, ExternalLink, Pencil, Check, Table as TableIcon, Trash, Plus
+  Upload, X, ExternalLink, Pencil, Check, Table as TableIcon, Trash, Plus, Crop
 } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { useToast, ToastContainer } from '@/components/useToast';
+import ImageCropper from '@/components/ImageCropper';
+
+const IMAGE_NODES = ['imageResize', 'image'];
+
+function findSelectedImage(editor) {
+  const { selection, doc } = editor.state;
+  if (selection.node && IMAGE_NODES.includes(selection.node.type.name)) {
+    return { pos: selection.from, node: selection.node };
+  }
+  let found = null;
+  doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+    if (found) return false;
+    if (IMAGE_NODES.includes(node.type.name)) found = { pos, node };
+  });
+  return found;
+}
 
 function LinkPopover({ editor, toast, wrapperRef }) {
   const [show, setShow] = useState(false);
@@ -198,7 +214,7 @@ function LinkPopover({ editor, toast, wrapperRef }) {
   );
 }
 
-const MenuBar = ({ editor, onSetHeaderImage, toast, articleSlug, editionSlug }) => {
+const MenuBar = ({ editor, onSetHeaderImage, onStartCrop, toast, articleSlug, editionSlug }) => {
   const [isUploading, setIsUploading] = useState(false);
 
   if (!editor) return null;
@@ -339,6 +355,11 @@ const MenuBar = ({ editor, onSetHeaderImage, toast, articleSlug, editionSlug }) 
       <span className="menu-divider" />
       <button type="button"
         className={`menu-btn set-header-btn${isImageActive ? ' image-active' : ''}`}
+        onClick={onStartCrop} disabled={!isImageActive} title="Crop Selected Image">
+        <Crop size={15} /> Crop
+      </button>
+      <button type="button"
+        className={`menu-btn set-header-btn${isImageActive ? ' image-active' : ''}`}
         onClick={handleSetHeader} disabled={!isImageActive} title="Set Selected Image as Header">
         <ImageUp size={15} /> Set as Header
       </button>
@@ -354,6 +375,8 @@ export default function RichTextEditor({ content, onChange, onSetHeaderImage, im
   const wrapperRef = useRef(null);
   const [bankUploading, setBankUploading] = useState(false);
   const [imgErrors, setImgErrors] = useState({});
+  const [cropTarget, setCropTarget] = useState(null);
+  const [cropping, setCropping] = useState(false);
   const openBankUpload = () => bankUploadRef.current?.click();
 
   const editor = useEditor({
@@ -443,6 +466,67 @@ export default function RichTextEditor({ content, onChange, onSetHeaderImage, im
     }
     setBankUploading(false);
     e.target.value = '';
+  };
+
+  const startCrop = () => {
+    const image = editor && findSelectedImage(editor);
+    if (!image?.node.attrs.src) {
+      toast.info('Select an image in the editor first.');
+      return;
+    }
+    setCropTarget({ pos: image.pos, src: image.node.attrs.src });
+  };
+
+  const cancelCrop = () => {
+    setCropTarget(null);
+    editor?.commands.focus();
+  };
+
+  const applyCrop = async (crop) => {
+    setCropping(true);
+    try {
+      const res = await fetch('/api/crop-image', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ src: cropTarget.src, crop })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        toast.error('Crop failed: ' + (data.error || 'Unknown error'));
+        return;
+      }
+
+      let target = null;
+      const current = editor.state.doc.nodeAt(cropTarget.pos);
+      if (current && IMAGE_NODES.includes(current.type.name) && current.attrs.src === cropTarget.src) {
+        target = { pos: cropTarget.pos, node: current };
+      } else {
+        editor.state.doc.descendants((node, pos) => {
+          if (target) return false;
+          if (IMAGE_NODES.includes(node.type.name) && node.attrs.src === cropTarget.src) target = { pos, node };
+        });
+      }
+      if (!target) {
+        toast.error('The image was removed before the crop finished.');
+        setCropTarget(null);
+        return;
+      }
+
+      editor.chain()
+        .focus()
+        .command(({ tr }) => {
+          tr.setNodeMarkup(target.pos, null, { ...target.node.attrs, src: data.url, height: null });
+          return true;
+        })
+        .setNodeSelection(target.pos)
+        .run();
+      setCropTarget(null);
+      toast.success('Image cropped.');
+    } catch {
+      toast.error('Crop error — please try again.');
+    } finally {
+      setCropping(false);
+    }
   };
 
   const showImageBank = imageBank !== undefined && setImageBank !== undefined;
@@ -554,8 +638,11 @@ export default function RichTextEditor({ content, onChange, onSetHeaderImage, im
       `}</style>
 
       <div className="editor-wrapper" ref={wrapperRef}>
-        <MenuBar editor={editor} onSetHeaderImage={onSetHeaderImage} toast={toast} articleSlug={articleSlug} editionSlug={editionSlug} />
+        <MenuBar editor={editor} onSetHeaderImage={onSetHeaderImage} onStartCrop={startCrop} toast={toast} articleSlug={articleSlug} editionSlug={editionSlug} />
         <LinkPopover editor={editor} toast={toast} wrapperRef={wrapperRef} />
+        {cropTarget && (
+          <ImageCropper src={cropTarget.src} busy={cropping} onCancel={cancelCrop} onApply={applyCrop} />
+        )}
 
         <div className="editor-body">
           <EditorContent editor={editor} className="editor-content-area" />
