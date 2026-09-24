@@ -30,7 +30,7 @@ export default async function AuthorProfile({ params }) {
     .lean();
 
   return (
-    <div className="container" style={{ padding: "4rem 1.5rem", backgroundColor: "#ffffff" }}>
+    <div className="container page-section">
       <div style={{ display: "flex", gap: "2rem", alignItems: "flex-start", marginBottom: "4rem", borderBottom: "1px solid var(--border)", paddingBottom: "2rem" }}>
         <div style={{ flexShrink: 0 }}>
           {author.avatarUrl ? (

@@ -4,9 +4,11 @@ import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-function git(args) {
+function sourceCommit() {
+  const fromCoolify = process.env.SOURCE_COMMIT;
+  if (fromCoolify && fromCoolify !== 'unknown') return fromCoolify;
   try {
-    return execSync(`git ${args}`, { cwd: __dirname, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    return execSync('git rev-parse HEAD', { cwd: __dirname, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
   } catch {
     return '';
   }
@@ -18,8 +20,9 @@ const nextConfig = {
   serverExternalPackages: ['jsdom'],
 
   env: {
-    BUILD_COMMIT: git('rev-parse --short HEAD'),
-    BUILD_COMMIT_TIME: git('log -1 --format=%cI'),
+    BUILD_COMMIT: sourceCommit(),
+    REPO_URL: process.env.REPO_URL || 'https://github.com/DDbrother9999/nobelium',
+    BUILD_TIME: new Date().toISOString(),
   },
 
   experimental: {

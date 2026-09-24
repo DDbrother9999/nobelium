@@ -115,7 +115,7 @@ export default async function Home() {
       {secondary.length > 0 && (
         <section className="container secondary-grid">
           {secondary.map(story => (
-            <article className="secondary-story" key={story.id}>
+            <article className={`secondary-story${story.image ? "" : " no-image"}`} key={story.id}>
               {story.image && (
                 <Link href={`/articles/${story.slug}`}>
                   <img src={story.image} alt={story.title} />

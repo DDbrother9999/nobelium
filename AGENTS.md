@@ -18,7 +18,7 @@ When creating or modifying components for the **Nobelium** web app, you must str
    - **Nobles Blue** (`#004990`, `var(--primary)`) is the background of the site header, the site footer and the cover story headline panel, with white text on top. It is also the color for kickers (small uppercase subject labels), active tabs, links and section rules on white.
    - **Blue shades** are for the footer only: `var(--nobles-blue-dark)` (`#003a73`) for the bottom bar and `var(--nobles-blue-light)` (`#0a5aa8`) for the oversized "Nobelium" wordmark.
    - **Text**: `var(--ink)` (`#121212`) for headlines and primary text, `var(--ink-muted)` (`#363636`) for excerpts and deks, and `var(--ink-subtle)` (`#5c5c5c`) for bylines, dates and other metadata. Legacy pages may still use `#000000`/`#111111`.
-   - **Yellow/Gold** (`#FFD100`, `var(--accent-yellow)`) is for hover and active states, underlines (a 3px `text-decoration-color` underline on headline hover), small uppercase labels on blue backgrounds (e.g., "Cover Story", footer column labels), the Featured card numbers, and the 6px rule at the top of the footer. The homepage **Featured band** is the one section allowed a full yellow background; do not add others.
+   - **Yellow/Gold** (`#FFD100`, `var(--accent-yellow)`) is for hover and active states, underlines (a 3px `text-decoration-color` underline on headline hover), small uppercase labels on blue backgrounds (e.g., "Cover Story", footer column labels), the Featured card numbers, and the 6px rules at the top of the footer and under the mobile menu's top bar. The homepage **Featured band** is the one section allowed a full yellow background; do not add others.
 
 3. **Typography**:
    - Use `Georgia, serif` (`var(--font-serif)`) for the "Nobelium" masthead and wordmark, all headlines (`h1`–`h4`), the cover story dek, the footer tagline and the Featured card numbers.
@@ -30,6 +30,12 @@ When creating or modifying components for the **Nobelium** web app, you must str
    - Content sits in `.container` (max-width `1200px`, `1.5rem` side padding). Only the cover image, the Featured band and the header/footer bars run full-bleed.
    - The header has no bottom margin; each page owns its own top spacing (e.g., `padding-top: 2rem`).
    - Keep forms (Auth/Admin) contained in simple bordered boxes without background hues.
+
+5. **Mobile (≤ 760px)**:
+   - All mobile overrides live in the single `@media (max-width: 760px)` block at the end of `globals.css`; desktop styles above it must stay untouched. Swap elements with the hide-only helpers `.hide-desktop` (shown only on mobile) and `.hide-mobile` (shown only on desktop); each element keeps its own `display` value.
+   - Use a 16px page gutter, a sticky blue header with Search and Menu icon buttons (44×44px tap targets), the wrapped white subject strip below it, and the full-screen blue menu (`SiteMenu` in `Navbar.jsx`).
+   - Multi-column grids stack into a single column, Featured cards stack vertically, and nothing may scroll horizontally.
+   - On mobile, link hover keeps the link's color and adds a 2px yellow underline; never switch a link to `var(--primary)` on a blue background.
 
 # Architectural & Development Rules
 
@@ -50,6 +56,7 @@ When creating or modifying components for the **Nobelium** web app, you must str
 4. **Production Deployment**:
    - The application runs on a local VM and is managed by PM2 (`pm2 status`).
    - If you make backend or structural changes, always run `npm run build && npx pm2 restart nobelium` to apply them to the live production server.
+   - The footer build line reads `BUILD_COMMIT`, `BUILD_TIME` and `REPO_URL` from `next.config.mjs` at build time. On Coolify, `.git` is removed before the build, so the commit comes from `SOURCE_COMMIT` (enable **Include Source Commit in Build**); set a `REPO_URL` env var to point commit links at a different repository.
 
 5. **Toast Notifications instead of Alerts**:
    - NEVER use the native browser `alert()` or `window.alert()` functions for user feedback.

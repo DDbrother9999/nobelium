@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 
 const commit = process.env.BUILD_COMMIT;
-const committedAt = process.env.BUILD_COMMIT_TIME;
+const repoUrl = process.env.REPO_URL;
+const builtAt = process.env.BUILD_TIME;
 
 const UNITS = [
   ["year", 31536000],
@@ -39,8 +40,11 @@ export default function BuildInfo({ year }) {
 
   return (
     <span>
-      {year} Nobelium - Build {commit}
-      {now && committedAt && ` from ${timeAgo(new Date(committedAt), now)}`}
+      {year} Nobelium - Commit{" "}
+      <a href={`${repoUrl}/commit/${commit}`} target="_blank" rel="noopener" className="build-commit">
+        {commit.slice(0, 7)}
+      </a>
+      {now && builtAt && ` built ${timeAgo(new Date(builtAt), now)}`}
     </span>
   );
 }

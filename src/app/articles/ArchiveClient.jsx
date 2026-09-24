@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import ArticleCard from "@/components/ArticleCard";
 import { Search } from "lucide-react";
@@ -27,10 +27,21 @@ function applySearch(articles, query) {
 }
 
 export default function ArchiveClient({ initialArticles }) {
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
   const searchParams = useSearchParams();
+  const queryParam = searchParams.get("q") || "";
+  const [query, setQuery] = useState(queryParam);
+  const [lastQueryParam, setLastQueryParam] = useState(queryParam);
+  if (queryParam !== lastQueryParam) {
+    setLastQueryParam(queryParam);
+    setQuery(queryParam);
+  }
+  const [page, setPage] = useState(1);
   const subjectFilter = searchParams.get("subject");
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    if (window.location.hash === "#search") searchInputRef.current?.focus();
+  }, []);
 
   useEffect(() => setPage(1), [subjectFilter, query]);
 
@@ -51,6 +62,8 @@ export default function ArchiveClient({ initialArticles }) {
       <div className="search-bar">
         <Search size={20} className="search-icon" />
         <input
+          ref={searchInputRef}
+          id="search"
           type="text"
           placeholder="Search articles by title, subject, or author..."
           value={query}

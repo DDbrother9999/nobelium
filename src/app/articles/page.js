@@ -16,7 +16,7 @@ export default async function ArticlesArchive() {
     .lean();
 
   return (
-    <div className="container" style={{ padding: "4rem 1.5rem" }}>
+    <div className="container page-section">
       <div style={{ marginBottom: "3rem", textAlign: "center" }}>
         <h1 style={{ fontSize: "2.5rem", color: "var(--primary)" }}>Article Archive</h1>
       </div>
