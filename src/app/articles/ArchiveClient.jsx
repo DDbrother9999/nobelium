@@ -7,26 +7,26 @@ import { Search } from "lucide-react";
 
 const PAGE_SIZE = 9;
 
-function applySearch(articles, query) {
-  if (!query) return articles;
+function applySearch(stories, query) {
+  if (!query) return stories;
   const q = query.toLowerCase();
   const matching = [];
   const rest = [];
-  for (const article of articles) {
+  for (const story of stories) {
     if (
-      article.subject?.toLowerCase().includes(q) ||
-      article.title?.toLowerCase().includes(q) ||
-      article.authorId?.name?.toLowerCase().includes(q)
+      story.subject?.toLowerCase().includes(q) ||
+      story.title?.toLowerCase().includes(q) ||
+      story.author?.name?.toLowerCase().includes(q)
     ) {
-      matching.push(article);
+      matching.push(story);
     } else {
-      rest.push(article);
+      rest.push(story);
     }
   }
   return [...matching, ...rest];
 }
 
-export default function ArchiveClient({ initialArticles }) {
+export default function ArchiveClient({ stories }) {
   const searchParams = useSearchParams();
   const queryParam = searchParams.get("q") || "";
   const [query, setQuery] = useState(queryParam);
@@ -46,13 +46,13 @@ export default function ArchiveClient({ initialArticles }) {
   useEffect(() => setPage(1), [subjectFilter, query]);
 
   const { primary, secondary } = useMemo(() => {
-    const searched = applySearch(initialArticles, query);
+    const searched = applySearch(stories, query);
     if (!subjectFilter) return { primary: [], secondary: searched };
     return {
       primary: searched.filter(a => a.subject === subjectFilter),
       secondary: searched.filter(a => a.subject !== subjectFilter),
     };
-  }, [initialArticles, query, subjectFilter]);
+  }, [stories, query, subjectFilter]);
 
   const visibleSecondary = secondary.slice(0, page * PAGE_SIZE);
   const hasMore = visibleSecondary.length < secondary.length;
@@ -96,8 +96,8 @@ export default function ArchiveClient({ initialArticles }) {
               </h2>
               {primary.length > 0 ? (
                 <div className="article-grid">
-                  {primary.map(article => (
-                    <ArticleCard key={article.slug} article={article} />
+                  {primary.map(story => (
+                    <ArticleCard key={story.id} story={story} />
                   ))}
                 </div>
               ) : (
@@ -121,8 +121,8 @@ export default function ArchiveClient({ initialArticles }) {
                 </h2>
               )}
               <div className="article-grid">
-                {visibleSecondary.map(article => (
-                  <ArticleCard key={article.slug} article={article} />
+                {visibleSecondary.map(story => (
+                  <ArticleCard key={story.id} story={story} />
                 ))}
               </div>
               {hasMore && (

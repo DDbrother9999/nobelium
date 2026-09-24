@@ -9,14 +9,15 @@ import slugify from "slugify";
 import { s3Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "@/lib/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getAuthenticatedUser } from "@/lib/session";
+import { isEditor } from "@/lib/permissions";
 
 export async function POST(request) {
   try {
     await connectMongo();
     const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ error: "User not found in database" }, { status: 404 });
-    if (user.role !== "Admin" && user.role !== "Editor") {
-      return NextResponse.json({ error: "Forbidden: Admins or Editors only" }, { status: 403 });
+    if (!isEditor(user)) {
+      return NextResponse.json({ error: "Forbidden: Admins or Subject Editors only" }, { status: 403 });
     }
 
     const formData = await request.formData();
@@ -27,6 +28,9 @@ export async function POST(request) {
     
     if (!file || !editionId) {
       return NextResponse.json({ error: "File and Edition ID are required" }, { status: 400 });
+    }
+    if (user.role === "Subject Editor" && !user.managedSubjects.includes(subject)) {
+      return NextResponse.json({ error: "Forbidden: Not assigned to this subject" }, { status: 403 });
     }
 
     const edition = await Edition.findById(editionId);

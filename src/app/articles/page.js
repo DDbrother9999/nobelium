@@ -4,6 +4,7 @@ import connectMongo from "@/lib/mongodb";
 import Article from "@/models/Article";
 import User from "@/models/User";
 import Edition from "@/models/Edition";
+import { toStory } from "@/lib/stories";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,8 @@ export default async function ArticlesArchive() {
   await connectMongo();
   const articles = await Article.find({ isDeleted: { $ne: true }, status: "Published" })
     .sort({ createdAt: -1 })
-    .populate("authorId")
-    .populate("editionId")
+    .populate("authorId", "name")
+    .populate("editionId", "releaseDate")
     .lean();
 
   return (
@@ -22,7 +23,7 @@ export default async function ArticlesArchive() {
       </div>
 
       <Suspense fallback={null}>
-        <ArchiveClient initialArticles={JSON.parse(JSON.stringify(articles))} />
+        <ArchiveClient stories={articles.map(article => toStory(article, 120))} />
       </Suspense>
     </div>
   );

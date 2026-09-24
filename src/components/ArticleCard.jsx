@@ -3,57 +3,56 @@
 import Link from "next/link";
 import { Calendar, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatArticleDate } from "@/lib/dates";
 
-export default function ArticleCard({ article }) {
+export default function ArticleCard({ story }) {
   const router = useRouter();
+  const subject = story.subject || "Science";
+  const href = `/articles/${story.slug}`;
 
   return (
-    <div 
-      className="article-card" 
-      onClick={() => router.push(`/articles/${article.slug}`)}
+    <div
+      className="article-card"
+      onClick={() => router.push(href)}
       style={{ cursor: "pointer", position: "relative" }}
       role="link"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === "Enter") router.push(`/articles/${article.slug}`);
+        if (e.key === "Enter") router.push(href);
       }}
     >
-      {article.headerImageUrl && (
-        <div className="card-image" style={{ backgroundImage: `url(${article.headerImageUrl})` }}>
-          <span className="subject-tag">{article.subject || "Science"}</span>
+      {story.image && (
+        <div className="card-image" style={{ backgroundImage: `url(${story.image})` }}>
+          <span className="subject-tag">{subject}</span>
         </div>
       )}
       <div className="card-content">
-        {!article.headerImageUrl && (
-          <span className="subject-tag" style={{ position: "static", alignSelf: "flex-start", marginBottom: "0.75rem" }}>{article.subject || "Science"}</span>
+        {!story.image && (
+          <span className="subject-tag" style={{ position: "static", alignSelf: "flex-start", marginBottom: "0.75rem" }}>{subject}</span>
         )}
         <h3>
-          <Link href={`/articles/${article.slug}`} style={{ textDecoration: 'none', color: 'inherit' }} onClick={(e) => e.stopPropagation()}>
-            {article.title}
+          <Link href={href} style={{ textDecoration: 'none', color: 'inherit' }} onClick={(e) => e.stopPropagation()}>
+            {story.title}
           </Link>
         </h3>
-        <p className="excerpt">
-          {article.content && `${article.content.substring(0, 120).replace(/<[^>]+>/g, '')}...`}
-        </p>
+        <p className="excerpt">{story.excerpt}</p>
         <div className="card-meta">
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <User size={14} /> 
-            {article.authorId && article.authorId._id ? (
-              <Link 
-                href={`/personal/${article.authorId._id}`} 
+            <User size={14} />
+            {story.author ? (
+              <Link
+                href={`/personal/${story.author.id}`}
                 onClick={(e) => e.stopPropagation()}
                 className="author-link"
                 style={{ textDecoration: 'none', color: 'inherit' }}
               >
-                <span style={{ textDecoration: 'underline' }}>{article.authorId.name}</span>
+                <span style={{ textDecoration: 'underline' }}>{story.author.name}</span>
               </Link>
             ) : (
-              article.authorId?.name || "Staff Writer"
+              "Staff Writer"
             )}
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <Calendar size={14} /> {formatArticleDate(article) || "Draft"}
+            <Calendar size={14} /> {story.date}
           </span>
         </div>
       </div>

@@ -6,6 +6,7 @@ import UserSchema from "@/models/User";
 import Edition from "@/models/Edition";
 import { notFound } from "next/navigation";
 import { formatArticleDate } from "@/lib/dates";
+import { sanitizeArticleHtml } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,7 @@ export default async function SingleArticle({ params }) {
         </div>
       )}
 
-      <div className="article-content" dangerouslySetInnerHTML={{ __html: article.content }} />
+      <div className="article-content" dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.content) }} />
 
       {article.authorId && (
         <div style={{

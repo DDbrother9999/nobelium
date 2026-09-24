@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { cookies } from "next/headers";
 import connectMongo from "@/lib/mongodb";
 import User from "@/models/User";
 
@@ -67,9 +68,8 @@ export function verifySessionToken(token) {
   return payload;
 }
 
-export async function getAuthenticatedUser(request) {
-  const session = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const payload = verifySessionToken(session);
+async function findUserForToken(token) {
+  const payload = verifySessionToken(token);
   if (!payload?.email) return null;
 
   await connectMongo();
@@ -79,6 +79,15 @@ export async function getAuthenticatedUser(request) {
     : { email: payload.email };
 
   return User.findOne(query);
+}
+
+export async function getAuthenticatedUser(request) {
+  return findUserForToken(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+}
+
+export async function getCurrentUser() {
+  const cookieStore = await cookies();
+  return findUserForToken(cookieStore.get(SESSION_COOKIE_NAME)?.value);
 }
 
 export function getSessionCookieOptions() {

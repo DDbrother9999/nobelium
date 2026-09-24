@@ -63,7 +63,7 @@ export async function GET(request) {
     }
 
     await connectMongo();
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).collation({ locale: "en", strength: 2 });
 
     if (!user) {
       loginUrl.searchParams.set("error", "unauthorized");
@@ -71,6 +71,7 @@ export async function GET(request) {
     }
 
     const updateData = {
+      email,
       name: user.name && user.name !== "New User" ? user.name : googleUser.name,
       avatarUrl: user.avatarUrl || googleUser.picture,
     };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast, ToastContainer } from "@/components/useToast";
 import Link from "next/link";
 import { ArrowLeft, UserPlus } from "lucide-react";
@@ -23,9 +23,9 @@ export default function AdminUsersPage() {
   const [editingCell, setEditingCell] = useState({ id: null, field: null });
   const [editValue, setEditValue] = useState("");
   const [editSubjects, setEditSubjects] = useState([]);
+  const editingRef = useRef(null);
 
   const fetchUsers = async () => {
-    setLoading(true);
     try {
       const res = await fetch("/api/admin/users");
       const data = await res.json();
@@ -120,7 +120,13 @@ export default function AdminUsersPage() {
     }
   };
 
+  const closeEditor = () => {
+    editingRef.current = null;
+    setEditingCell({ id: null, field: null });
+  };
+
   const handleEditClick = (u, field) => {
+    editingRef.current = { id: u._id, field };
     setEditingCell({ id: u._id, field });
     if (field === "name") setEditValue(u.name || "");
     if (field === "email") setEditValue(u.email || "");
@@ -130,26 +136,40 @@ export default function AdminUsersPage() {
     if (field === "subjects") setEditSubjects(u.managedSubjects || []);
   };
 
-  const handleInlineSave = async (u) => {
-    try {
-      const payload = editingCell.field === "subjects"
-        ? { id: u._id, managedSubjects: editSubjects }
-        : { id: u._id, [editingCell.field]: editValue };
+  const replaceUser = (id, next) => {
+    setUsers(prev => prev.map(x => (x._id === id ? next : x)));
+  };
 
+  const handleInlineSave = async (u) => {
+    const cell = editingRef.current;
+    if (!cell) return;
+    closeEditor();
+
+    const isSubjects = cell.field === "subjects";
+    const unchanged = isSubjects
+      ? JSON.stringify(u.managedSubjects || []) === JSON.stringify(editSubjects)
+      : (u[cell.field] ?? "") === editValue;
+    if (unchanged) return;
+
+    const changes = isSubjects ? { managedSubjects: editSubjects } : { [cell.field]: editValue };
+    replaceUser(u._id, { ...u, ...changes });
+
+    try {
       const res = await fetch("/api/admin/users", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ id: u._id, ...changes }),
       });
       const data = await res.json();
       if (data.success) {
+        replaceUser(u._id, data.user);
         toast.success("Updated successfully");
-        setEditingCell({ id: null, field: null });
-        fetchUsers();
       } else {
+        replaceUser(u._id, u);
         toast.error("Error: " + data.error);
       }
     } catch {
+      replaceUser(u._id, u);
       toast.error("Failed to update");
     }
   };
@@ -163,12 +183,12 @@ export default function AdminUsersPage() {
           <input
             autoFocus
             type={field === "email" ? "email" : "text"}
-            placeholder={field === "title" ? u.role : undefined}
+            placeholder={field === "title" ? "Staff" : undefined}
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleInlineSave(u);
-              if (e.key === "Escape") setEditingCell({ id: null, field: null });
+              if (e.key === "Escape") closeEditor();
             }}
             onBlur={() => handleInlineSave(u)}
             style={{ width: "100%", padding: "0.5rem", border: "1px solid var(--primary)", outline: "none", boxSizing: "border-box" }}
@@ -201,13 +221,13 @@ export default function AdminUsersPage() {
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Escape") setEditingCell({ id: null, field: null });
+                if (e.key === "Escape") closeEditor();
               }}
               style={{ width: "100%", height: "120px", padding: "0.5rem", border: "1px solid var(--primary)", outline: "none", boxSizing: "border-box", fontFamily: "inherit", fontSize: "0.9rem" }}
             />
             <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
               <button onClick={() => handleInlineSave(u)} style={{ background: "var(--primary)", color: "#fff", padding: "0.4rem 0.8rem", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Save</button>
-              <button onClick={() => setEditingCell({ id: null, field: null })} style={{ background: "#ccc", color: "#000", padding: "0.4rem 0.8rem", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
+              <button onClick={closeEditor} style={{ background: "#ccc", color: "#000", padding: "0.4rem 0.8rem", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
             </div>
           </div>
         );
@@ -233,7 +253,7 @@ export default function AdminUsersPage() {
              </select>
              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
                 <button onClick={() => handleInlineSave(u)} style={{ background: "var(--primary)", color: "#fff", padding: "0.4rem 0.8rem", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Save</button>
-                <button onClick={() => setEditingCell({ id: null, field: null })} style={{ background: "#ccc", color: "#000", padding: "0.4rem 0.8rem", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
+                <button onClick={closeEditor} style={{ background: "#ccc", color: "#000", padding: "0.4rem 0.8rem", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
              </div>
           </div>
         );
@@ -244,7 +264,7 @@ export default function AdminUsersPage() {
     let displayValue = null;
     if (field === "name") displayValue = u.name;
     if (field === "email") displayValue = u.email;
-    if (field === "title") displayValue = u.title || <span style={{ color: "#aaa" }}>{u.role}</span>;
+    if (field === "title") displayValue = u.title || <span style={{ color: "#aaa" }}>Staff</span>;
     if (field === "bio") {
       displayValue = u.bio
         ? <span style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{u.bio}</span>

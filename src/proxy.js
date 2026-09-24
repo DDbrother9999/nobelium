@@ -4,19 +4,17 @@ const PUBLIC_PATHS = new Set(['/staff', '/staff/login']);
 
 export async function proxy(request) {
   const session = request.cookies.get('session');
-  
-  if (request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/staff')) {
-    if (!session && !PUBLIC_PATHS.has(request.nextUrl.pathname)) {
-      return NextResponse.redirect(new URL('/staff/login', process.env.APP_URL));
+  const { pathname } = request.nextUrl;
+  const baseUrl = process.env.APP_URL || request.url;
+
+  if (pathname.startsWith('/admin') || pathname.startsWith('/staff')) {
+    if (!session && !PUBLIC_PATHS.has(pathname)) {
+      return NextResponse.redirect(new URL('/staff/login', baseUrl));
     }
   }
 
-  if (request.nextUrl.pathname === '/staff/login' && session) {
-    return NextResponse.redirect(new URL('/staff/dashboard', process.env.APP_URL));
-  }
-
-  if (request.nextUrl.pathname === '/login') {
-    return NextResponse.redirect(new URL('/staff/login', process.env.APP_URL));
+  if (pathname === '/login') {
+    return NextResponse.redirect(new URL('/staff/login', baseUrl));
   }
 
   return NextResponse.next();

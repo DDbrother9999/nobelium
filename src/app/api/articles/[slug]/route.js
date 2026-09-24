@@ -4,7 +4,9 @@ import Article from "@/models/Article";
 import { s3Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "@/lib/s3";
 import { CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import Edition from "@/models/Edition";
+import slugify from "slugify";
 import { getAuthenticatedUser } from "@/lib/session";
+import { canEditArticle, isEditor } from "@/lib/permissions";
 import { MAX_FEATURED } from "@/lib/homepage";
 
 const EDITABLE_FIELDS = ["title", "slug", "subject", "content", "headerImageUrl", "imageBank", "authorId", "editionId", "status"];
@@ -13,32 +15,53 @@ export async function PUT(request, { params }) {
   try {
     await connectMongo();
     const user = await getAuthenticatedUser(request);
-    if (!["Admin", "Subject Editor", "Staff"].includes(user?.role)) {
-      return NextResponse.json({ error: "Forbidden: Unauthorized role" }, { status: 403 });
+    if (!user) {
+      return NextResponse.json({ error: "Forbidden: Not signed in" }, { status: 403 });
     }
 
-    const resolvedParams = await params;
-    const { slug } = resolvedParams;
+    const { slug } = await params;
 
     const article = await Article.findOne({ slug });
     if (!article) return NextResponse.json({ error: "Article not found" }, { status: 404 });
 
-    if (user.role === "Subject Editor" && (!user.managedSubjects || !user.managedSubjects.includes(article.subject))) {
-      return NextResponse.json({ error: "Forbidden: Not assigned to this article's subject" }, { status: 403 });
-    }
-    if (user.role === "Staff" && article.authorId.toString() !== user._id.toString()) {
-      return NextResponse.json({ error: "Forbidden: You can only edit your own articles" }, { status: 403 });
+    if (!canEditArticle(user, article)) {
+      return NextResponse.json({ error: "Forbidden: You can't edit this article" }, { status: 403 });
     }
 
     const input = await request.json();
     const body = Object.fromEntries(EDITABLE_FIELDS.filter(field => field in input).map(field => [field, input[field]]));
-    if (body.status && body.status !== "Published") {
-      body.isFeatured = false;
-      body.isCoverStory = false;
+
+    if (!isEditor(user)) {
+      if (body.status === "Published" && article.status !== "Published") {
+        return NextResponse.json({ error: "Forbidden: Only editors can publish articles" }, { status: 403 });
+      }
+      if (body.authorId && body.authorId !== article.authorId.toString()) {
+        return NextResponse.json({ error: "Forbidden: Only editors can change the author" }, { status: 403 });
+      }
     }
     if (body.subject && user.role === "Subject Editor" && !user.managedSubjects.includes(body.subject)) {
       return NextResponse.json({ error: "Forbidden: Cannot change to an unmanaged subject" }, { status: 403 });
     }
+
+    if ("slug" in body) {
+      body.slug = slugify(String(body.slug), { lower: true, strict: true });
+      if (!body.slug) {
+        return NextResponse.json({ error: "The URL slug can't be empty" }, { status: 400 });
+      }
+      if (body.slug !== article.slug && await Article.exists({ slug: body.slug })) {
+        return NextResponse.json({ error: "Another article already uses that URL slug" }, { status: 409 });
+      }
+    }
+
+    if (body.status && body.status !== "Published") {
+      body.isFeatured = false;
+      body.isCoverStory = false;
+    }
+    if (body.status === "Published" && !article.publishedAt) {
+      body.publishedAt = new Date();
+    }
+
+    const movedKeys = [];
     
     if ((body.slug && body.slug !== article.slug) || (body.editionId && body.editionId !== article.editionId?.toString())) {
       let oldEditionSlug = null;
@@ -61,16 +84,16 @@ export async function PUT(request, { params }) {
       const newPrefix = newEditionSlug ? `uploads/editions/${newEditionSlug}/${newSlug}/` : `uploads/editor/`;
 
       if (oldPrefix !== newPrefix) {
+        body.content ??= article.content || "";
+        body.headerImageUrl ??= article.headerImageUrl || "";
+        body.imageBank ??= article.imageBank || [];
+
         const keys = new Set();
         const baseUrl = R2_PUBLIC_URL.replace(/\/$/, "");
         const escapedBaseUrl = baseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`${escapedBaseUrl}/([^"\\s<>'&]+)`, 'g');
-        
-        const searchStrings = [
-          body.content !== undefined ? body.content : (article.content || ""),
-          body.headerImageUrl !== undefined ? body.headerImageUrl : (article.headerImageUrl || ""),
-          ...(body.imageBank !== undefined ? body.imageBank : (article.imageBank || []))
-        ];
+
+        const searchStrings = [body.content, body.headerImageUrl, ...body.imageBank];
 
         for (const str of searchStrings) {
           let match;
@@ -92,29 +115,17 @@ export async function PUT(request, { params }) {
               CopySource: encodeURI(`${R2_BUCKET_NAME}/${oldKey}`),
               Key: newKey
             }));
-            await s3Client.send(new DeleteObjectCommand({
-              Bucket: R2_BUCKET_NAME,
-              Key: oldKey
-            }));
-
-            const oldUrl = `${baseUrl}/${oldKey}`;
-            const newUrl = `${baseUrl}/${newKey}`;
-            
-            body.content = (body.content !== undefined ? body.content : article.content).replaceAll(oldUrl, newUrl);
-            
-            if (body.headerImageUrl !== undefined || article.headerImageUrl) {
-              body.headerImageUrl = (body.headerImageUrl !== undefined ? body.headerImageUrl : article.headerImageUrl).replaceAll(oldUrl, newUrl);
-            }
-            
-            if (body.imageBank !== undefined || article.imageBank) {
-              const currentBank = body.imageBank !== undefined ? body.imageBank : article.imageBank;
-              if (currentBank) {
-                body.imageBank = currentBank.map(url => url.replaceAll(oldUrl, newUrl));
-              }
-            }
           } catch (err) {
-            console.error(`Failed to migrate ${oldKey} to ${newKey}:`, err);
+            console.error(`Failed to copy ${oldKey} to ${newKey}:`, err);
+            continue;
           }
+
+          const oldUrl = `${baseUrl}/${oldKey}`;
+          const newUrl = `${baseUrl}/${newKey}`;
+          body.content = body.content.replaceAll(oldUrl, newUrl);
+          body.headerImageUrl = body.headerImageUrl.replaceAll(oldUrl, newUrl);
+          body.imageBank = body.imageBank.map(url => url.replaceAll(oldUrl, newUrl));
+          movedKeys.push(oldKey);
         }
       }
     }
@@ -126,6 +137,14 @@ export async function PUT(request, { params }) {
     );
 
     if (!updatedArticle) return NextResponse.json({ error: "Article not found" }, { status: 404 });
+
+    for (const oldKey of movedKeys) {
+      try {
+        await s3Client.send(new DeleteObjectCommand({ Bucket: R2_BUCKET_NAME, Key: oldKey }));
+      } catch (err) {
+        console.error(`Failed to delete old image ${oldKey}:`, err);
+      }
+    }
 
     return NextResponse.json({ success: true, article: updatedArticle }, {
       headers: { 'Cache-Control': 'no-store' }
@@ -208,21 +227,17 @@ export async function DELETE(request, { params }) {
   try {
     await connectMongo();
     const user = await getAuthenticatedUser(request);
-    if (!["Admin", "Subject Editor", "Staff"].includes(user?.role)) {
-      return NextResponse.json({ error: "Forbidden: Unauthorized role" }, { status: 403 });
+    if (!user) {
+      return NextResponse.json({ error: "Forbidden: Not signed in" }, { status: 403 });
     }
 
-    const resolvedParams = await params;
-    const { slug } = resolvedParams;
+    const { slug } = await params;
 
     const article = await Article.findOne({ slug });
     if (!article) return NextResponse.json({ error: "Article not found" }, { status: 404 });
 
-    if (user.role === "Subject Editor" && (!user.managedSubjects || !user.managedSubjects.includes(article.subject))) {
-      return NextResponse.json({ error: "Forbidden: Not assigned to this article's subject" }, { status: 403 });
-    }
-    if (user.role === "Staff" && article.authorId.toString() !== user._id.toString()) {
-      return NextResponse.json({ error: "Forbidden: You can only delete your own articles" }, { status: 403 });
+    if (!canEditArticle(user, article)) {
+      return NextResponse.json({ error: "Forbidden: You can't delete this article" }, { status: 403 });
     }
 
     const deletedArticle = await Article.findOneAndUpdate(

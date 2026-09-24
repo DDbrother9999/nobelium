@@ -151,7 +151,7 @@ function LinkPopover({ editor, toast, wrapperRef }) {
       if (!isAutoSave) toast.info('Link removed.');
     } else {
       if (newText !== displayText && linkRange) {
-        chain.insertContent(`<a href="${trimmed}">${newText}</a>`).run();
+        chain.insertContent({ type: 'text', text: newText, marks: [{ type: 'link', attrs: { href: trimmed } }] }).run();
       } else {
         chain.extendMarkRange('link').setLink({ href: trimmed }).run();
       }

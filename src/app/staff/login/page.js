@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/session";
+
 const errorMessages = {
   unauthorized: "That Google account is not authorized for Nobelium.",
   oauth_config: "Google login is not configured.",
@@ -8,6 +11,8 @@ const errorMessages = {
 };
 
 export default async function StaffLogin({ searchParams }) {
+  if (await getCurrentUser()) redirect("/staff/dashboard");
+
   const params = await searchParams;
   const error = errorMessages[params?.error] || "";
 

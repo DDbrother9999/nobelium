@@ -37,7 +37,7 @@ export default async function StaffPage() {
                 <span className="staff-avatar"><UserIcon size={32} /></span>
               )}
               <div className="staff-info">
-                <span className="kicker">{member.title || member.role}</span>
+                <span className="kicker">{member.title || "Staff"}</span>
                 <h2>{member.name}</h2>
                 {(member.pronouns || member.graduationYear) && (
                   <span className="byline">

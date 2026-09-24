@@ -3,17 +3,21 @@ import Article from "@/models/Article";
 import User from "@/models/User";
 import Edition from "@/models/Edition";
 import ClientArticleEditor from "@/components/ClientArticleEditor";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/session";
+import { canEditArticle, isEditor } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditArticlePage({ params }) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/staff/login");
+
   await connectMongo();
-  const resolvedParams = await params;
-  const { slug } = resolvedParams;
+  const { slug } = await params;
 
   const article = await Article.findOne({ slug }).lean();
-  if (!article) return notFound();
+  if (!article || !canEditArticle(user, article)) notFound();
 
   const users = await User.find({}).sort({ name: 1 }).lean();
   const editions = await Edition.find({}).sort({ createdAt: -1 }).lean();
@@ -25,16 +29,18 @@ export default async function EditArticlePage({ params }) {
     editionId: article.editionId?.toString() || "",
     createdAt: article.createdAt?.toISOString(),
     updatedAt: article.updatedAt?.toISOString(),
+    publishedAt: article.publishedAt?.toISOString(),
   };
 
   const serializedUsers = users.map(u => ({ _id: u._id.toString(), name: u.name }));
   const serializedEditions = editions.map(e => ({ _id: e._id.toString(), name: e.name, slug: e.slug }));
 
   return (
-    <ClientArticleEditor 
-      initialArticle={serializedArticle} 
-      users={serializedUsers} 
-      editions={serializedEditions} 
+    <ClientArticleEditor
+      initialArticle={serializedArticle}
+      users={serializedUsers}
+      editions={serializedEditions}
+      isEditor={isEditor(user)}
     />
   );
 }

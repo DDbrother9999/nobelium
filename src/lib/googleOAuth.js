@@ -63,7 +63,9 @@ export async function getGoogleUserInfo(accessToken) {
 }
 
 export function normalizeNextPath(value) {
-  if (!value || typeof value !== "string") return "/staff/dashboard";
-  if (!value.startsWith("/") || value.startsWith("//")) return "/staff/dashboard";
-  return value;
+  if (!value || typeof value !== "string" || !value.startsWith("/")) return "/staff/dashboard";
+
+  const url = new URL(value, "http://localhost");
+  if (url.origin !== "http://localhost") return "/staff/dashboard";
+  return url.pathname + url.search + url.hash;
 }

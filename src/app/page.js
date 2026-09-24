@@ -6,8 +6,7 @@ import Edition from "@/models/Edition";
 import HomeSubjectTabs from "@/components/HomeSubjectTabs";
 import { SUBJECTS } from "@/lib/subjects";
 import { MAX_FEATURED } from "@/lib/homepage";
-import { excerpt } from "@/lib/text";
-import { formatArticleDate } from "@/lib/dates";
+import { toStory } from "@/lib/stories";
 
 export const dynamic = "force-dynamic";
 
@@ -38,19 +37,6 @@ async function findPublished(filter, limit) {
     { path: "authorId", select: "name" },
     { path: "editionId", select: "releaseDate" },
   ]);
-}
-
-function toStory(article, excerptLength = 160) {
-  return {
-    id: String(article._id),
-    slug: article.slug,
-    title: article.title,
-    subject: article.subject,
-    image: article.headerImageUrl || "",
-    excerpt: excerpt(article.content, excerptLength),
-    author: article.authorId ? { id: String(article.authorId._id), name: article.authorId.name } : null,
-    date: formatArticleDate(article),
-  };
 }
 
 function Byline({ story }) {

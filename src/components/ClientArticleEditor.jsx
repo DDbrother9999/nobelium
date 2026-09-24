@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { useToast, ToastContainer } from "@/components/useToast";
 import { SUBJECTS } from "@/lib/subjects";
 
-export default function ClientArticleEditor({ initialArticle, users, editions }) {
+export default function ClientArticleEditor({ initialArticle, users, editions, isEditor }) {
   const router = useRouter();
   const { toasts, toast } = useToast();
 
@@ -37,10 +37,11 @@ export default function ClientArticleEditor({ initialArticle, users, editions })
       if (data.success) {
         toast.success("Article saved successfully!");
         router.refresh();
-        if (slug !== initialArticle.slug) {
-          window.location.href = `/admin/edit/${slug}`;
+        const savedSlug = data.article.slug;
+        if (savedSlug !== initialArticle.slug) {
+          window.location.href = `/admin/edit/${savedSlug}`;
         } else if (status === "Published") {
-          router.push(`/articles/${slug}`);
+          router.push(`/articles/${savedSlug}`);
         }
       } else {
         toast.error("Error saving: " + data.error);
@@ -171,7 +172,9 @@ export default function ClientArticleEditor({ initialArticle, users, editions })
                 <select value={status} onChange={e => setStatus(e.target.value)}>
                   <option value="Draft">Draft</option>
                   <option value="Pending Review">Pending Review</option>
-                  <option value="Published">Published</option>
+                  {(isEditor || initialArticle.status === "Published") && (
+                    <option value="Published">Published</option>
+                  )}
                 </select>
               </div>
               <div className="form-group">
@@ -182,7 +185,7 @@ export default function ClientArticleEditor({ initialArticle, users, editions })
               </div>
               <div className="form-group">
                 <label>Author</label>
-                <select value={authorId} onChange={e => setAuthorId(e.target.value)} required>
+                <select value={authorId} onChange={e => setAuthorId(e.target.value)} disabled={!isEditor} required>
                   <option value="">Select Author...</option>
                   {users.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
                 </select>

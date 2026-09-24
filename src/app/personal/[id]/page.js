@@ -5,6 +5,7 @@ import User from "@/models/User";
 import Article from "@/models/Article";
 import Edition from "@/models/Edition";
 import { notFound } from "next/navigation";
+import { toStory } from "@/lib/stories";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +26,8 @@ export default async function AuthorProfile({ params }) {
 
   const articles = await Article.find({ authorId: author._id, status: "Published", isDeleted: { $ne: true } })
     .sort({ createdAt: -1 })
-    .populate("authorId")
-    .populate("editionId")
+    .populate("authorId", "name")
+    .populate("editionId", "releaseDate")
     .lean();
 
   return (
@@ -50,7 +51,7 @@ export default async function AuthorProfile({ params }) {
             {author.name}
           </h1>
           <span style={{ display: "inline-block", backgroundColor: "var(--primary)", color: "#ffffff", padding: "0.2rem 0.6rem", borderRadius: "4px", fontSize: "0.85rem", fontWeight: "bold", marginBottom: "1rem" }}>
-            {author.title || author.role}
+            {author.title || "Staff"}
           </span>
           {author.bio && (
             <p style={{ margin: 0, color: "#111111", lineHeight: "1.6", fontSize: "1.1rem" }}>
@@ -70,7 +71,7 @@ export default async function AuthorProfile({ params }) {
         ) : (
           <div className="article-grid">
             {articles.map(article => (
-              <ArticleCard key={article.slug} article={article} />
+              <ArticleCard key={article.slug} story={toStory(article, 120)} />
             ))}
           </div>
         )}
