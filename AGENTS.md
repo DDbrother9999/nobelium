@@ -57,6 +57,7 @@ When creating or modifying components for the **Nobelium** web app, you must str
    - The application runs on a local VM and is managed by PM2 (`pm2 status`).
    - If you make backend or structural changes, always run `npm run build && npx pm2 restart nobelium` to apply them to the live production server.
    - The footer build line reads `BUILD_COMMIT`, `BUILD_TIME` and `REPO_URL` from `next.config.mjs` at build time. On Coolify, `.git` is removed before the build, so the commit comes from `SOURCE_COMMIT` (enable **Include Source Commit in Build**); set a `REPO_URL` env var to point commit links at a different repository.
+   - Coolify builds with Nixpacks, which picks its Node nixpkgs snapshot from `engines.node` in `package.json`, not from the `NIXPACKS_NODE_VERSION` env var. Keep `engines.node` set; without it Nixpacks installs Node 22.11, which can't load jsdom.
 
 5. **Toast Notifications instead of Alerts**:
    - NEVER use the native browser `alert()` or `window.alert()` functions for user feedback.

@@ -2,6 +2,9 @@
   "name": "nobelium",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "env-cmd -f .env.dev next dev",
     "build": "env-cmd -f .env.dev next build",
