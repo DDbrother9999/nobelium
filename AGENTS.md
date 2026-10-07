@@ -74,3 +74,7 @@ When creating or modifying components for the **Nobelium** web app, you must str
 8. **Shared Helpers**:
    - Import the subject list from `src/lib/subjects.js` (`SUBJECTS`) instead of re-declaring it.
    - Use `formatArticleDate` (`src/lib/dates.js`) for article dates and `excerpt` / `htmlToText` (`src/lib/text.js`) for plain-text previews of article HTML.
+
+9. **Archive & Search**:
+   - `/articles` is the only archive and search page. Its filters live in the URL: `q` (matches title and subject), repeatable `subject` (e.g. `?subject=Biology&subject=Chemistry`), `author` (user id) and `edition` (edition slug). Author and Edition sit behind "More filters".
+   - Link to a filtered view with `subjectHref` or these params instead of adding new listing pages. Filtering runs client-side in `ArchiveClient`, which updates the URL with `window.history.replaceState`.

@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }) {
   return (
     <div className="container" style={{ minHeight: "calc(100vh - 200px)", display: "flex", justifyContent: "center", alignItems: "center" }}>
       <div style={{ textAlign: "center", border: "1px solid var(--border)", padding: "3rem 2rem", width: "100%", maxWidth: "400px" }}>
-        <h1 style={{ marginBottom: "1rem" }}>Author Login</h1>
+        <h1 style={{ marginBottom: "1rem" }}>Login</h1>
         <p style={{ marginBottom: "2rem", opacity: 0.8 }}>Sign in with your Google account to access the publishing dashboard.</p>
 
         {error && <p style={{ color: "#b91c1c", marginBottom: "1.5rem", fontWeight: "bold" }}>{error}</p>}

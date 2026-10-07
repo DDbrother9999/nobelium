@@ -28,7 +28,7 @@ export default async function SingleArticle({ params }) {
     <article className="container" style={{ paddingTop: "2rem", paddingBottom: "4rem" }}>
       <div style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border)", paddingBottom: "1rem" }}>
         <Link href="/articles" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", color: "var(--primary)", fontWeight: "bold", marginBottom: "1rem" }}>
-          <ArrowLeft size={16} /> Back to Articles
+          <ArrowLeft size={16} /> Back to Archive
         </Link>
         <div style={{ marginBottom: "1rem" }}>
           <span className="subject-tag" style={{ position: "static", display: "inline-block" }}>

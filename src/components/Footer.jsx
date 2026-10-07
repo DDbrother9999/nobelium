@@ -28,9 +28,9 @@ export default function Footer() {
           </div>
           <div className="footer-column">
             <span className="footer-label">Nobelium</span>
-            <Link href="/articles" className="footer-link">All Articles</Link>
+            <Link href="/articles" className="footer-link">Archive</Link>
             <Link href="/staff" className="footer-link">Staff</Link>
-            <Link href="/login" className="footer-link">Author login</Link>
+            <Link href="/staff/login" className="footer-link">Login</Link>
           </div>
         </div>
       </div>

@@ -20,7 +20,7 @@ export default async function StaffLogin({ searchParams }) {
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh", background: "#ffffff" }}>
       <div style={{ width: "100%", maxWidth: "400px", padding: "2rem", border: "1px solid var(--border)" }}>
         <h1 style={{ fontFamily: "var(--font-serif)", color: "var(--primary)", textAlign: "center", marginBottom: "1rem" }}>
-          Staff Login
+          Login
         </h1>
         <p style={{ textAlign: "center", marginBottom: "2rem", fontSize: "0.9rem", color: "#000000" }}>
           Sign in using your authorized Google account.

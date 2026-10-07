@@ -7,14 +7,14 @@ import { flushSync } from "react-dom";
 import { Menu, Search, User, X } from "lucide-react";
 import { SUBJECTS, subjectHref } from "@/lib/subjects";
 
-function SubjectLinks({ className, activeSubject = null, onClick }) {
+function SubjectLinks({ className, activeSubjects = [], onClick }) {
   return (
     <>
       {SUBJECTS.map(sub => (
         <Link
           href={subjectHref(sub)}
           key={sub}
-          className={`${className}${activeSubject === sub ? " active" : ""}`}
+          className={`${className}${activeSubjects.includes(sub) ? " active" : ""}`}
           onClick={onClick}
         >
           {sub}
@@ -27,8 +27,15 @@ function SubjectLinks({ className, activeSubject = null, onClick }) {
 function ActiveSubjectLinks({ className }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const activeSubject = pathname === "/articles" ? searchParams.get("subject") : null;
-  return <SubjectLinks className={className} activeSubject={activeSubject} />;
+  const activeSubjects = pathname === "/articles" ? searchParams.getAll("subject") : [];
+  return <SubjectLinks className={className} activeSubjects={activeSubjects} />;
+}
+
+function focusArchiveSearch(e) {
+  const archiveSearch = document.getElementById("archive-search");
+  if (!archiveSearch) return;
+  e.preventDefault();
+  archiveSearch.focus();
 }
 
 function HeaderBar({ onLogoClick, children }) {
@@ -111,9 +118,9 @@ function SiteMenu({ searchRef, onClose }) {
         <span className="site-menu-label">Sections</span>
         <SubjectLinks className="site-menu-subject" onClick={onClose} />
         <div className="site-menu-links">
-          <Link href="/articles" onClick={onClose}>All Articles</Link>
+          <Link href="/articles" onClick={onClose}>Archive</Link>
           <Link href="/staff" onClick={onClose}>Staff</Link>
-          <Link href="/login" onClick={onClose}><User size={18} aria-hidden="true" />Author login</Link>
+          <Link href="/staff/login" onClick={onClose}><User size={18} aria-hidden="true" />Login</Link>
         </div>
       </div>
     </div>
@@ -146,8 +153,10 @@ export default function Navbar() {
             </Suspense>
           </nav>
           <div className="header-actions">
-            <Link href="/articles#search" className="icon-btn hide-mobile" aria-label="Search"><Search size={20} /></Link>
-            <Link href="/login" className="icon-btn hide-mobile" aria-label="Author Login"><User size={20} /></Link>
+            <Link href="/articles?focus=search" className="icon-btn hide-mobile" aria-label="Search" onClick={focusArchiveSearch}>
+              <Search size={20} />
+            </Link>
+            <Link href="/staff/login" className="icon-btn hide-mobile" aria-label="Login"><User size={20} /></Link>
             <button type="button" className="icon-btn hide-desktop" aria-label="Search" onClick={e => openMenu(e, true)}>
               <Search size={20} />
             </button>
